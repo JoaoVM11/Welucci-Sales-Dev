@@ -1,0 +1,6 @@
+{
+  "name": "Welucci SDR Intelligence",
+  "description": "Sistema de gestão de produtividade comercial, acompanhamento de metas da equipe e SDRs/BDRs, cálculo de GAP D0 e planejamento inteligente da rotina diária.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

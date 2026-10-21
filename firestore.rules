@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    // Test connection doc
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+
+    // SDR Profiles
+    match /sdr_profiles/{profileId} {
+      allow read: if true;
+      allow write: if isValidId(profileId);
+    }
+
+    // Goals (Team and SDR targets set by admin)
+    match /goals/{goalId} {
+      allow read: if true;
+      allow write: if isValidId(goalId);
+    }
+
+    // SDR Tasks
+    match /tasks/{taskId} {
+      allow read: if true;
+      allow write: if isValidId(taskId);
+    }
+
+    // Meetings synced from HubSpot
+    match /meetings/{meetingId} {
+      allow read: if true;
+      allow write: if isValidId(meetingId);
+    }
+
+    // Notifications (funnel events, inbound leads, outbound lists)
+    match /notifications/{notificationId} {
+      allow read: if true;
+      allow write: if isValidId(notificationId);
+    }
+
+    // Audit logs
+    match /audit_logs/{logId} {
+      allow read: if true;
+      allow write: if isValidId(logId);
+    }
+
+    // HubSpot Native Mirror Tables
+    match /sdr_metrics/{metricId} {
+      allow read: if true;
+      allow write: if isValidId(metricId);
+    }
+
+    match /sdr_tasks/{taskId} {
+      allow read: if true;
+      allow write: if isValidId(taskId);
+    }
+
+    match /sdr_calendar_blocks/{blockId} {
+      allow read: if true;
+      allow write: if isValidId(blockId);
+    }
+
+    match /hubspot_config/{configId} {
+      allow read: if true;
+      allow write: if isValidId(configId);
+    }
+  }
+}

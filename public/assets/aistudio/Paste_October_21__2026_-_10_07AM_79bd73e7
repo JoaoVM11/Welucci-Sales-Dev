@@ -1,0 +1,1140 @@
+# DESENVOLVA UMA APLICAÇÃO WEB COMPLETA — WELUCCI SDR INTELLIGENCE
+
+## INSTRUÇÃO PRINCIPAL
+
+Desenvolva uma aplicação web completa, funcional, moderna e responsiva chamada **Welucci SDR Intelligence**, um sistema de gestão de produtividade, planejamento operacional, acompanhamento de metas e otimização da rotina comercial da equipe de SDRs da Welucci.
+
+Não quero apenas um protótipo visual, uma landing page, um dashboard estático ou uma documentação técnica. Quero que você desenvolva a aplicação de ponta a ponta, com frontend funcional, backend, banco de dados, autenticação, perfis de acesso, motor de cálculo, dashboards interativos, integrações preparadas para uso real e uma estrutura que permita conectar as contas corporativas.
+
+Implemente o máximo possível diretamente no ambiente de desenvolvimento disponível. Não se limite a descrever o que deve ser feito.
+
+**Regras de execução:**
+
+1. Construa a aplicação, suas páginas, seus componentes, suas rotas, seu banco de dados e suas regras de negócio.
+2. Não entregue somente wireframes ou telas estáticas.
+3. Não utilize dados fictícios como se fossem dados reais da Welucci ou do HubSpot.
+4. Quando as integrações ainda não estiverem autenticadas, crie uma camada de dados demonstrativos claramente identificada como demonstração, além da estrutura necessária para conectar os sistemas reais.
+5. Não simule uma integração real sem efetivamente consultar a fonte de dados.
+6. Não invente credenciais, tokens, permissões ou resultados de chamadas de API.
+7. Não exponha chaves de API no frontend. Toda operação que utilize credenciais deverá ocorrer no backend ou em funções seguras do ambiente.
+8. Não pare após criar a primeira tela. Desenvolva todas as áreas descritas neste documento.
+9. Caso falte alguma configuração externa, implemente a estrutura correspondente e disponibilize uma tela administrativa de configuração e diagnóstico.
+10. Tome decisões técnicas razoáveis sem interromper o desenvolvimento para perguntar detalhes que possam ser tratados por configurações editáveis.
+11. Utilize português brasileiro em toda a interface, com datas no formato DD/MM/AAAA, horários no padrão de 24 horas e fuso horário America/Sao_Paulo.
+12. Ao final, teste os principais fluxos, corrija erros e apresente o que está funcional, o que depende de autenticação e como conectar os serviços.
+
+---
+
+# 1. CONTEXTO DA OPERAÇÃO COMERCIAL
+
+A Welucci possui uma equipe de SDRs responsável por atendimento de leads, prospecção e qualificação comercial, execução de cadências, acompanhamento de oportunidades, agendamento de reuniões e passagem de bastão para os closers.
+
+A operação possui atividades concorrentes:
+
+- Atendimento de novos leads.
+- Atendimento de leads que passaram do dia anterior.
+- Execução de tarefas de cadência de follow-up, chamadas Touch Points.
+- Ligações obrigatórias em cada Touch Point.
+- Confirmação de reuniões.
+- Preparação e passagem de bastão para closers.
+- Recuperação de leads que faltaram às reuniões.
+- Recuperação de leads que cancelaram e não reagendaram.
+- Gestão de tarefas atrasadas.
+- Participação em reuniões internas, treinamentos e compromissos corporativos.
+
+A agenda real varia diariamente. Por isso, cada SDR precisa de um planejamento adaptável à sua disponibilidade e ao volume real de tarefas.
+
+O sistema deverá integrar três dimensões:
+
+**Produtividade:** quanto o SDR tem para fazer, quanto executou e quanto está atrasado.
+
+**Resultado comercial:** quantas reuniões precisa agendar, quantas foram agendadas, quantas foram realizadas e quanto falta para atingir a meta.
+
+**Planejamento:** o que fazer agora, em qual horário, com qual prioridade e em que quantidade.
+
+O objetivo é ajudar cada SDR a organizar seu dia e permitir que a gestão acompanhe a capacidade produtiva, a execução das atividades, a conversão em reuniões e o cumprimento das metas da equipe.
+
+---
+
+# 2. ARQUITETURA E TECNOLOGIA
+
+Antes de implementar, inspecione as capacidades do ambiente Google Vibe Coding e utilize a stack mais compatível com os recursos efetivamente disponíveis.
+
+Priorize:
+
+- Frontend: React e TypeScript.
+- Interface: Tailwind CSS e componentes reutilizáveis.
+- Gráficos: biblioteca compatível com gráficos interativos.
+- Backend: API segura ou funções server-side.
+- Banco de dados: PostgreSQL, Supabase ou banco gerenciado disponível.
+- Autenticação: solução segura com controle de sessão e permissões.
+- Integrações: APIs oficiais do HubSpot e Microsoft Graph.
+- Automação: webhooks e processos agendados quando suportados.
+
+Se a plataforma possuir uma stack própria ou recursos nativos mais adequados, adapte a implementação.
+
+Não crie uma arquitetura desnecessariamente complexa. Utilize componentes modulares, serviços separados e uma estrutura de fácil manutenção.
+
+A aplicação deve ser funcional mesmo sem as integrações autenticadas, desde que o modo de demonstração esteja claramente identificado e isolado dos dados reais.
+
+## Estrutura lógica
+
+Organize o projeto em módulos:
+
+- Autenticação e usuários.
+- Equipe e permissões.
+- Integração HubSpot.
+- Integração Microsoft 365.
+- Gestão de metas.
+- Gestão de tarefas.
+- Gestão de reuniões.
+- Motor de planejamento.
+- Dashboard administrativo.
+- Dashboard individual do SDR.
+- Rotina diária.
+- Indicadores e relatórios.
+- Configurações e auditoria.
+
+---
+
+# 3. AUTENTICAÇÃO E PERFIS DE ACESSO
+
+Implemente autenticação real e controle de acesso baseado em função.
+
+Crie dois perfis principais:
+
+## ADMIN / GESTOR
+
+O administrador pode:
+
+- Visualizar toda a equipe.
+- Consultar indicadores individuais e consolidados.
+- Visualizar tarefas atrasadas e pendências.
+- Acompanhar a capacidade produtiva.
+- Consultar reuniões agendadas e realizadas.
+- Acompanhar metas e gaps.
+- Configurar metas e parâmetros operacionais.
+- Configurar integrações.
+- Consultar alertas e histórico.
+- Gerenciar usuários e SDRs.
+- Definir as regras de planejamento.
+
+## SDR
+
+O SDR pode:
+
+- Visualizar somente seus próprios indicadores.
+- Visualizar suas tarefas e reuniões.
+- Acompanhar seu progresso em relação à meta.
+- Consultar suas pendências.
+- Visualizar sua rotina diária.
+- Aceitar ou rejeitar recomendações de replanejamento.
+- Consultar seu histórico individual.
+
+O SDR não pode acessar indicadores privados de outros profissionais nem modificar configurações globais de gestão.
+
+Implemente a autorização no backend e no banco de dados. Não confie apenas em esconder botões ou páginas no frontend.
+
+O administrador deverá conseguir vincular cada usuário ao respectivo ID de usuário do HubSpot e ao calendário corporativo correspondente.
+
+---
+
+# 4. IDENTIDADE VISUAL E EXPERIÊNCIA DO USUÁRIO
+
+Crie uma interface com aparência de software SaaS profissional, voltado para gestão comercial.
+
+Direção visual:
+
+- Design limpo e moderno.
+- Fundo predominantemente claro.
+- Azul-marinho, branco e cinza como base visual.
+- Verde para indicadores positivos.
+- Amarelo ou âmbar para atenção.
+- Vermelho para atrasos, riscos e desvios críticos.
+- Cards com hierarquia visual clara.
+- Gráficos de leitura rápida.
+- Tabelas com filtros.
+- Navegação lateral fixa em desktop.
+- Layout responsivo para tablet e celular.
+- Tipografia legível.
+- Estados de carregamento, erro, vazio e ausência de conexão.
+- Tooltips explicando indicadores e fórmulas.
+- Datas e números formatados para o Brasil.
+
+Evite excesso de cores, efeitos, animações e elementos decorativos.
+
+A prioridade é que o gestor consiga identificar rapidamente onde estão os problemas e que o SDR compreenda imediatamente o que precisa fazer.
+
+Não use dados inventados para preencher visualmente as telas. Se for necessário demonstrar o produto, disponibilize um ambiente de demonstração com dados fictícios explicitamente sinalizados.
+
+---
+
+# 5. NAVEGAÇÃO PRINCIPAL
+
+Para administradores, crie a seguinte navegação:
+
+1. Visão geral.
+2. Equipe SDR.
+3. Produtividade.
+4. Reuniões.
+5. Metas e GAP.
+6. Planejamento operacional.
+7. Relatórios.
+8. Integrações.
+9. Configurações.
+
+Para SDRs, crie:
+
+1. Meu painel.
+2. Minha rotina.
+3. Minhas tarefas.
+4. Minhas reuniões.
+5. Minhas metas.
+6. Meu histórico.
+
+As rotas devem respeitar o perfil de acesso e não podem expor informações restritas.
+
+---
+
+# 6. DASHBOARD ADMINISTRATIVO — VISÃO GERAL
+
+Esta será a principal tela da gestão.
+
+No topo, exiba:
+
+- Saudação ao usuário.
+- Data de referência.
+- Seletor de período.
+- Filtro por SDR.
+- Status das integrações.
+- Última sincronização dos dados.
+- Indicador de modo real ou demonstração.
+
+O dashboard deverá mostrar os principais indicadores consolidados da equipe.
+
+## 6.1. Cards de indicadores
+
+Criar cards para:
+
+**SDRs ativos:** quantidade de SDRs ativos na operação.
+
+**Tarefas pendentes:** total de tarefas abertas que exigem execução.
+
+**Tarefas atrasadas:** total de tarefas pendentes com vencimento anterior à data de referência.
+
+**Tarefas que vencem hoje:** total de tarefas abertas com vencimento no dia.
+
+**Carga operacional:** quantidade estimada de minutos necessária para executar as tarefas pendentes.
+
+**Capacidade disponível:** quantidade estimada de minutos produtivos da equipe no período.
+
+**Reuniões agendadas:** quantidade de reuniões atribuídas à equipe no período.
+
+**Reuniões realizadas:** quantidade de reuniões efetivamente realizadas no período.
+
+**GAP de reuniões D0:** quantidade de reuniões adicionais que precisam ser agendadas hoje para atingir a meta diária de agendamentos.
+
+**Risco operacional:** quantidade de SDRs cuja carga estimada excede a capacidade disponível ou possui tarefas com risco de SLA.
+
+Cada indicador deverá possuir tooltip explicando sua definição e fórmula.
+
+Não misture reuniões agendadas, reuniões realizadas e reuniões que ocorrerão hoje. São métricas diferentes e devem ser apresentadas separadamente.
+
+## 6.2. Quadro de saúde operacional da equipe
+
+Criar uma tabela com uma linha por SDR.
+
+Colunas:
+
+- SDR.
+- Tarefas pendentes.
+- Tarefas atrasadas.
+- Tarefas que vencem hoje.
+- Minutos necessários.
+- Minutos disponíveis.
+- Utilização da capacidade.
+- Reuniões agendadas no período.
+- Reuniões realizadas no período.
+- Meta de agendamentos.
+- Agendamentos realizados.
+- GAP para a meta.
+- Status operacional.
+
+Permitir ordenar por:
+
+- Maior quantidade de atrasos.
+- Maior déficit de capacidade.
+- Maior GAP de reuniões.
+- Menor percentual de atingimento da meta.
+- Maior volume de tarefas pendentes.
+
+Ao clicar em um SDR, abrir uma visão detalhada desse profissional.
+
+## 6.3. Alertas prioritários
+
+Criar uma seção com os alertas que exigem atenção da gestão:
+
+- SDR com tarefas atrasadas acima do limite configurado.
+- SDR com capacidade insuficiente.
+- Reuniões do dia sem confirmação, se essa informação estiver disponível.
+- Tarefas com SLA em risco.
+- SDR abaixo do ritmo necessário para atingir a meta.
+- Integração com erro ou dados desatualizados.
+- Falta de reuniões agendadas suficientes para atingir a meta.
+- Concentração excessiva de tarefas em determinados horários.
+
+Cada alerta deverá apresentar o motivo, o impacto estimado e a ação recomendada.
+
+---
+
+# 7. DASHBOARD INDIVIDUAL DO SDR
+
+Cada SDR deverá ter um painel personalizado e restrito aos próprios dados.
+
+Essa será a tela inicial após o login.
+
+## 7.1. Indicadores individuais
+
+Exibir cards com:
+
+- Minha meta de reuniões agendadas.
+- Reuniões agendadas no período.
+- Quanto falta para atingir a meta.
+- Percentual de atingimento da meta.
+- Reuniões realizadas.
+- Tarefas atrasadas.
+- Tarefas pendentes para hoje.
+- Minutos de trabalho necessários.
+- Minutos produtivos disponíveis.
+- Progresso do planejamento diário.
+
+## 7.2. Progresso da meta
+
+Criar uma barra visual de progresso.
+
+Exemplo ilustrativo:
+
+Meta de agendamentos: 4.
+
+Agendamentos realizados: 2.
+
+Faltam: 2.
+
+Progresso: 50%.
+
+Esses números são apenas exemplos. Os valores reais deverão ser calculados com os dados sincronizados e as metas configuradas.
+
+Exibir também uma mensagem de ritmo operacional, como:
+
+- Meta atingida.
+- No ritmo esperado.
+- Precisa acelerar o volume de agendamentos.
+- Risco de não atingir a meta.
+- Meta diária não aplicável, caso não exista uma meta configurada.
+
+A mensagem deve ser baseada em regras claras, e não em julgamentos subjetivos.
+
+## 7.3. Tarefas e pendências
+
+Exibir três grupos:
+
+1. Atrasadas.
+2. Com vencimento hoje.
+3. Futuras.
+
+Permitir filtrar por tipo, prioridade e vencimento.
+
+Mostrar o título, a data de vencimento, a prioridade, o contato associado e o acesso ao registro correspondente no HubSpot, quando disponível.
+
+Não duplicar informações nem permitir concluir uma tarefa no sistema local sem sincronizar corretamente o status com o HubSpot.
+
+## 7.4. Minha rotina de hoje
+
+Criar um botão destacado para acessar a agenda operacional do dia.
+
+A rotina deverá mostrar os blocos recomendados, os compromissos existentes e as atividades prioritárias.
+
+O sistema deverá informar:
+
+- O que fazer agora.
+- O que vem a seguir.
+- Quantas tarefas executar.
+- Quanto tempo está reservado.
+- Quais tarefas estão atrasadas.
+- Quais atividades precisam ser priorizadas.
+- Quanto tempo ainda resta no expediente.
+
+---
+
+# 8. MÓDULO DE REUNIÕES — AGENDADAS X REALIZADAS
+
+A fonte oficial para os indicadores de reuniões deverá ser o HubSpot, utilizando os registros de reuniões e as atividades comerciais disponíveis na conta.
+
+É obrigatório distinguir o conceito de agendamento do conceito de realização.
+
+## 8.1. Indicadores de reuniões
+
+Exibir:
+
+- Reuniões agendadas.
+- Reuniões realizadas.
+- Reuniões canceladas.
+- Reuniões com no-show.
+- Reuniões reagendadas, quando identificáveis.
+- Taxa de comparecimento.
+- Taxa de cancelamento.
+- Taxa de no-show.
+- Conversão de reuniões agendadas em realizadas.
+
+A fórmula básica da taxa de comparecimento será:
+
+Taxa de comparecimento = reuniões realizadas ÷ reuniões elegíveis para avaliação de comparecimento × 100.
+
+O denominador deverá excluir reuniões futuras e seguir uma regra consistente para cancelamentos e reagendamentos.
+
+Não classifique uma reunião futura como no-show.
+
+## 8.2. Visão por período
+
+Permitir selecionar:
+
+- Hoje.
+- Ontem.
+- Esta semana.
+- Semana anterior.
+- Este mês.
+- Mês anterior.
+- Intervalo personalizado.
+
+Exibir gráficos de reuniões agendadas e realizadas por dia.
+
+Também exibir uma tabela por SDR com:
+
+- Reuniões agendadas.
+- Reuniões realizadas.
+- Cancelamentos.
+- No-shows.
+- Taxa de comparecimento.
+- Meta de agendamentos.
+- Percentual de atingimento.
+
+## 8.3. Visão individual
+
+Ao selecionar um SDR, apresentar sua evolução no período, seus resultados e sua conversão de agendamentos em reuniões realizadas.
+
+## 8.4. Origem dos dados
+
+Identifique no HubSpot os objetos, atividades e propriedades efetivamente utilizados pela Welucci para registrar reuniões.
+
+Não presuma que toda reunião agendada esteja registrada como um objeto ou atividade específica sem verificar a estrutura real da conta.
+
+Se houver diferenças entre reunião, evento de calendário, atividade comercial e agendamento, documente o mapeamento e escolha uma fonte oficial para cada indicador.
+
+Evite contar o mesmo compromisso duas vezes.
+
+Quando a API não disponibilizar diretamente o estado de realização, utilize a fonte confiável existente na operação ou crie uma regra explícita de classificação. Não infira que uma reunião aconteceu somente porque estava no calendário.
+
+---
+
+# 9. MÓDULO DE METAS E GAP DE REUNIÕES
+
+Este módulo deverá calcular a quantidade de agendamentos necessária para que a equipe e cada SDR atinjam a meta.
+
+É fundamental distinguir:
+
+- Meta de reuniões agendadas.
+- Meta de reuniões realizadas.
+- Agendamentos já feitos.
+- Reuniões já realizadas.
+- Agendamentos necessários para atingir a meta.
+- Agendamentos adicionais que precisam ser feitos no dia.
+
+Esses conceitos não são intercambiáveis.
+
+## 9.1. Configuração de metas
+
+Criar uma tela administrativa para definir:
+
+- Meta diária de agendamentos por SDR.
+- Meta semanal.
+- Meta mensal.
+- Meta de reuniões realizadas, se aplicável.
+- Dias úteis considerados.
+- Calendário de feriados, quando necessário.
+- Metas individuais ou diferenciadas.
+- Data de início e término de validade da meta.
+
+A meta diária deverá ser editável, e não codificada permanentemente no sistema.
+
+## 9.2. Fórmula de GAP D0
+
+D0 significa o dia atual.
+
+O GAP D0 deverá responder:
+
+**Quantas reuniões adicionais precisam ser agendadas hoje para que a meta de agendamentos do dia seja atingida?**
+
+Fórmula individual:
+
+GAP D0 = máximo entre zero e (meta diária de agendamentos − agendamentos válidos contabilizados para a meta de hoje).
+
+Exemplo:
+
+Meta diária: 4 agendamentos.
+
+Agendamentos contabilizados para a meta de hoje: 1.
+
+GAP D0: 3.
+
+O sistema deverá mostrar:
+
+- Meta do dia.
+- Agendamentos contabilizados.
+- GAP D0.
+- Percentual de atingimento.
+- Quantidade de agendamentos necessária por hora produtiva restante, quando houver dados suficientes.
+
+A contagem deverá utilizar uma definição configurável e consistente de agendamento. Uma reunião criada hoje para ocorrer futuramente deve contar para a meta de agendamento do dia se essa for a regra comercial adotada.
+
+Uma reunião agendada anteriormente e realizada hoje não deverá ser contada automaticamente como um novo agendamento D0.
+
+Cancelamentos, reagendamentos e duplicidades deverão seguir regras de contabilização explícitas.
+
+## 9.3. GAP da equipe
+
+Calcular:
+
+GAP D0 da equipe = soma dos gaps individuais dos SDRs ativos e elegíveis para a meta diária.
+
+Exibir:
+
+- Meta diária total.
+- Agendamentos contabilizados.
+- GAP restante.
+- Percentual de atingimento.
+- Distribuição do GAP por SDR.
+
+Permitir filtrar por equipe e período.
+
+## 9.4. Ritmo necessário
+
+Calcular o ritmo necessário para atingir a meta considerando o tempo produtivo restante.
+
+Exemplo:
+
+GAP: 3 agendamentos.
+
+Tempo produtivo restante: 3 horas.
+
+Ritmo necessário: 1 agendamento por hora.
+
+Exibir esse resultado como uma referência matemática, não como garantia de conversão.
+
+Se não houver tempo produtivo restante, exibir que a janela operacional do dia terminou ou que o GAP não pode mais ser atingido no expediente disponível.
+
+---
+
+# 10. CAPACIDADE PRODUTIVA DA EQUIPE
+
+O sistema deverá calcular a capacidade produtiva com base nas tarefas reais e na disponibilidade efetiva.
+
+## 10.1. Carga de trabalho
+
+Para cada SDR, calcular:
+
+- Total de tarefas pendentes.
+- Tarefas atrasadas.
+- Tarefas que vencem hoje.
+- Duração estimada total.
+- Duração por categoria.
+- Tempo necessário para atividades prioritárias.
+
+A duração deverá ser configurável por tipo de atividade e poderá ser ajustada com base no histórico de execução.
+
+## 10.2. Capacidade disponível
+
+Considerar:
+
+- Expediente configurado.
+- Reuniões do Outlook.
+- Treinamentos.
+- Pausas.
+- Ausências.
+- Bloqueios operacionais.
+- Margem de segurança.
+
+Fórmula:
+
+Capacidade disponível = tempo de expediente − compromissos − pausas − demais bloqueios − margem de segurança aplicável.
+
+Evitar descontar duas vezes o mesmo intervalo.
+
+## 10.3. Utilização da capacidade
+
+Calcular:
+
+Utilização = carga estimada de trabalho ÷ capacidade produtiva disponível × 100.
+
+Quando a capacidade disponível for zero, não dividir por zero. Exibir um estado específico.
+
+Classificação inicial, configurável:
+
+- Até 70%: capacidade confortável.
+- Acima de 70% até 90%: capacidade moderada.
+- Acima de 90% até 100%: capacidade elevada.
+- Acima de 100%: sobrecarga estimada.
+
+Esses limites deverão ser ajustáveis pelo administrador e não deverão ser apresentados como padrões cientificamente validados.
+
+## 10.4. Visão consolidada
+
+Exibir um gráfico com a carga estimada versus a capacidade disponível de cada SDR.
+
+Permitir identificar:
+
+- Quem possui capacidade ociosa.
+- Quem está sobrecarregado.
+- Quem tem mais tarefas atrasadas.
+- Quem precisa de redistribuição ou apoio.
+- Quanto da capacidade da equipe está comprometido com reuniões internas.
+
+Não redistribuir automaticamente tarefas entre SDRs sem regras de responsabilidade e autorização.
+
+---
+
+# 11. MOTOR DE PLANEJAMENTO DA ROTINA DIÁRIA
+
+Este módulo é central para o funcionamento do sistema.
+
+O expediente padrão dos SDRs é das 09h00 às 19h00.
+
+Considere inicialmente os seguintes compromissos recorrentes, configuráveis no sistema:
+
+- Daily diária das 09h30 às 10h00.
+- Às segundas-feiras, a reunião de equipe ocorre às 10h00, substituindo o horário habitual da Daily.
+- Às quartas-feiras, há uma reunião de trabalho às 14h00.
+- Às sextas-feiras, existe uma 1:1 quinzenal às 10h00, com a Daily antes e a 1:1 depois.
+
+As durações e recorrências devem ser validadas e configuráveis. Não invente o término de uma reunião quando ele não estiver disponível.
+
+O calendário oficial será o Outlook.
+
+## 11.1. Fontes do planejamento
+
+Utilizar:
+
+- Tarefas pendentes do HubSpot.
+- Prazos e prioridades.
+- Durações estimadas.
+- Agenda do Outlook.
+- Disponibilidade real.
+- Regras de prioridade.
+- Metas operacionais.
+- Margem de segurança.
+
+## 11.2. Prioridades
+
+Ordem inicial:
+
+1. Compromissos existentes e janelas obrigatórias.
+2. Leads com SLA crítico.
+3. Confirmações e passagens de bastão de reuniões iminentes.
+4. Touch Points atrasados ou com vencimento no dia.
+5. Recuperação de no-shows e cancelamentos.
+6. Outras tarefas comerciais.
+7. Atividades administrativas sem urgência.
+
+O motor deverá considerar prazo, duração e impacto comercial, não apenas uma ordenação fixa.
+
+## 11.3. Distribuição por blocos
+
+Criar blocos de trabalho adaptativos.
+
+Exemplo de apresentação:
+
+- 09h00–09h30: tratamento de pendências prioritárias.
+- 10h00–11h00: cadências e ligações.
+- 11h00–11h30: novos leads.
+- 13h00–14h00: Touch Points.
+- 15h00–16h00: recuperação e reagendamento.
+- 16h00–17h00: cadências pendentes.
+- 17h00–18h00: confirmações e passagens de bastão.
+- 18h00–19h00: conclusão das atividades restantes.
+
+Esses horários são apenas exemplos. A distribuição real deve ser calculada conforme a agenda do dia e o volume de trabalho.
+
+## 11.4. Quantidade de tarefas por bloco
+
+O sistema deverá calcular quantas tarefas cabem em cada bloco considerando a duração de cada atividade.
+
+Exemplo:
+
+Um bloco possui 60 minutos disponíveis.
+
+As tarefas selecionadas demandam 8, 10, 6, 8 e 8 minutos.
+
+A carga total é de 40 minutos.
+
+Uma tarefa adicional de 15 minutos pode ser alocada, desde que os 55 minutos totais respeitem a margem e as demais restrições.
+
+O sistema deverá exibir a quantidade recomendada, a duração total e a capacidade restante.
+
+## 11.5. Replanejamento
+
+Quando uma reunião for adicionada, uma tarefa for concluída ou um novo lead urgente chegar, recalcular as recomendações afetadas.
+
+Preservar reuniões existentes e evitar alterações desnecessárias em blocos não afetados.
+
+Não alterar automaticamente vencimentos no HubSpot nem mover reuniões do Outlook.
+
+No MVP, o sistema deverá sugerir mudanças e permitir que o SDR aceite ou rejeite a recomendação.
+
+## 11.6. Capacidade insuficiente
+
+Se as tarefas não couberem no expediente, exibir:
+
+- Minutos necessários.
+- Minutos disponíveis.
+- Déficit de capacidade.
+- Tarefas em risco.
+- Sugestões de priorização.
+- Necessidade de escalonamento para a gestão.
+
+Nunca ocultar tarefas ou simular que o planejamento está completo quando existem atividades sem alocação.
+
+---
+
+# 12. INTEGRAÇÃO REAL COM O HUBSPOT
+
+Crie um módulo de integração preparado para consultar as APIs oficiais do HubSpot.
+
+Antes de finalizar o mapeamento, verifique a estrutura real da conta e identifique:
+
+- Usuários e responsáveis.
+- Tarefas.
+- Atividades de ligação.
+- Registros de reuniões.
+- Contatos e leads.
+- Negócios associados.
+- Status e propriedades de conclusão.
+- Datas de vencimento.
+- Datas de criação.
+- Responsáveis pelas atividades.
+- Identificadores únicos.
+- Propriedades necessárias para medir agendamento e realização.
+
+Utilize os endpoints e escopos de autenticação adequados à versão vigente da API.
+
+A integração deverá suportar paginação, limites de requisição, tratamento de erros, sincronização incremental e reconciliação periódica.
+
+Use identificadores externos para evitar duplicidades.
+
+Crie uma tela de administração da integração contendo:
+
+- Status da conexão.
+- Última sincronização.
+- Quantidade de registros importados.
+- Erros recentes.
+- Botão para testar conexão.
+- Botão para sincronização manual.
+- Instruções de configuração.
+- Estado da autenticação.
+
+Não apresente uma conexão como funcional antes de executar uma chamada real com credenciais autorizadas.
+
+Não exponha tokens ou segredos no navegador.
+
+## Reuniões do HubSpot
+
+A aplicação deverá importar os registros necessários para calcular agendadas versus realizadas, mas deverá primeiro identificar como a Welucci registra esses eventos.
+
+Se os dados disponíveis não permitirem identificar com segurança o status de realização, apresentar o indicador como indisponível ou parcialmente confiável, explicando o motivo.
+
+Não classificar uma reunião como realizada apenas porque sua data passou.
+
+---
+
+# 13. INTEGRAÇÃO COM OUTLOOK / MICROSOFT GRAPH
+
+Desenvolva uma camada de integração com Microsoft Graph para obter os calendários autorizados.
+
+A integração deverá:
+
+- Consultar eventos.
+- Identificar início e término.
+- Considerar recorrências.
+- Tratar alterações e cancelamentos.
+- Respeitar fuso horário.
+- Identificar indisponibilidade.
+- Atualizar o planejamento.
+- Registrar falhas de sincronização.
+
+Utilize notificações de alteração quando suportadas e viáveis, com reconciliação periódica.
+
+Crie uma tela administrativa de conexão com status, diagnóstico e última sincronização.
+
+Não modifique eventos existentes no Outlook sem autorização explícita.
+
+---
+
+# 14. MICROSOFT TEAMS E NOTIFICAÇÕES
+
+Prepare a aplicação para enviar notificações pelo Microsoft Teams, utilizando mecanismos oficiais e disponíveis no ambiente corporativo.
+
+Notificações recomendadas:
+
+- Resumo da rotina no início do expediente.
+- Aviso de tarefas prioritárias.
+- Alerta de sobrecarga.
+- Aviso de alteração relevante no planejamento.
+- Lembrete de reunião.
+- Alerta de GAP de agendamentos.
+- Erro de sincronização.
+
+Evite notificações repetitivas e permita configurar a frequência.
+
+Se a integração não puder ser concluída sem credenciais ou permissões externas, implemente a configuração e os estados de conexão, sem simular o envio de mensagens.
+
+---
+
+# 15. MODELO DE DADOS
+
+Crie o banco de dados e as migrações necessárias para, no mínimo, as seguintes entidades:
+
+**users**
+- id
+- name
+- email
+- role
+- active
+- hubspot_owner_id
+- microsoft_user_id
+- created_at
+- updated_at
+
+**sdr_profiles**
+- id
+- user_id
+- workday_start
+- workday_end
+- timezone
+- active
+- created_at
+- updated_at
+
+**goals**
+- id
+- user_id ou team_id
+- metric_type
+- target_value
+- period_type
+- valid_from
+- valid_until
+- created_at
+- updated_at
+
+**tasks**
+- id
+- external_hubspot_id
+- owner_id
+- title
+- task_type
+- status
+- priority
+- due_at
+- estimated_duration_minutes
+- actual_duration_minutes
+- associated_contact_id
+- associated_deal_id
+- requires_call
+- last_synced_at
+- created_at
+- updated_at
+
+**meetings**
+- id
+- external_hubspot_id
+- owner_id
+- scheduled_at
+- ended_at
+- status
+- meeting_type
+- contact_id
+- deal_id
+- booked_at
+- source
+- last_synced_at
+
+**calendar_events**
+- id
+- external_event_id
+- user_id
+- starts_at
+- ends_at
+- status
+- blocks_availability
+- event_type
+- last_synced_at
+
+**planning_blocks**
+- id
+- user_id
+- plan_date
+- starts_at
+- ends_at
+- available_minutes
+- allocated_minutes
+- block_type
+- status
+- plan_version
+- created_at
+- updated_at
+
+**task_allocations**
+- id
+- task_id
+- planning_block_id
+- allocation_order
+- estimated_minutes
+- recommendation_status
+- rationale
+- created_at
+- updated_at
+
+**integration_status**
+- id
+- provider
+- status
+- last_success_at
+- last_error
+- updated_at
+
+**planning_history**
+- id
+- user_id
+- plan_date
+- event_type
+- reason
+- previous_state
+- new_state
+- created_at
+
+Adapte os campos conforme a estrutura real da ferramenta, preservando os requisitos funcionais.
+
+Utilize restrições de unicidade para identificadores externos e índices para consultas frequentes.
+
+Implemente controle de acesso no backend e, se houver suporte, políticas de segurança em nível de linha para garantir que cada SDR acesse somente seus dados e que o administrador tenha a visão da equipe.
+
+As metas deverão possuir histórico de validade para que mudanças futuras não alterem indevidamente a interpretação dos resultados passados.
+
+---
+
+# 16. REGRAS DE CÁLCULO E INTEGRIDADE
+
+Implemente funções de cálculo separadas e testáveis.
+
+### Meta e GAP
+
+GAP D0 = máximo entre zero e (meta diária − agendamentos válidos contabilizados para D0).
+
+### Percentual de atingimento
+
+Atingimento = agendamentos válidos contabilizados ÷ meta × 100.
+
+Se a meta for zero ou não estiver configurada, exibir estado específico em vez de dividir por zero.
+
+### Taxa de comparecimento
+
+Taxa de comparecimento = reuniões realizadas ÷ reuniões elegíveis para avaliação × 100.
+
+Excluir reuniões futuras do denominador e tratar cancelamentos de acordo com a regra definida.
+
+### Carga operacional
+
+Carga estimada = soma das durações estimadas das tarefas elegíveis.
+
+### Capacidade
+
+Capacidade produtiva = tempo de expediente − compromissos − pausas − bloqueios − margem de segurança aplicável.
+
+### Utilização da capacidade
+
+Utilização = carga estimada ÷ capacidade produtiva × 100.
+
+Se a capacidade for zero, exibir um estado específico.
+
+### Regras de integridade
+
+- Não contar tarefas concluídas como pendentes.
+- Não contar uma tarefa duas vezes.
+- Não contar uma reunião futura como realizada ou no-show.
+- Não confundir reuniões agendadas com reuniões realizadas.
+- Não contar uma reunião antiga como agendamento D0 só porque ocorreu hoje.
+- Definir como tratar cancelamentos e reagendamentos.
+- Não apresentar dados desatualizados como atuais.
+- Não alterar metas históricas sem preservar seu contexto.
+- Registrar a origem e a data de atualização dos dados.
+
+---
+
+# 17. RELATÓRIOS E INDICADORES
+
+Criar relatórios para:
+
+- Produtividade por SDR.
+- Produtividade da equipe.
+- Tarefas atrasadas por período.
+- Volume de tarefas por categoria.
+- Carga estimada versus capacidade.
+- Reuniões agendadas versus realizadas.
+- Taxa de comparecimento.
+- Cancelamentos e no-shows.
+- Atingimento de metas.
+- GAP diário de agendamentos.
+- Histórico de planejamento.
+- Precisão das estimativas de duração.
+- Cumprimento da rotina recomendada.
+
+Permitir filtros por período e SDR.
+
+Quando tecnicamente viável, disponibilizar exportação CSV.
+
+Distinguir dados reais sincronizados de dados demonstrativos.
+
+---
+
+# 18. CONFIGURAÇÕES ADMINISTRATIVAS
+
+Criar uma área de configurações para editar:
+
+- Metas diárias, semanais e mensais.
+- Horários de trabalho.
+- Duração média por tipo de tarefa.
+- Margem de segurança.
+- Limites de capacidade.
+- Tipos de tarefa.
+- Regras de prioridade.
+- Compromissos recorrentes.
+- Regras de agendamento e contabilização de reuniões.
+- Parâmetros de alertas.
+- Frequência de sincronização.
+- Configuração de integrações.
+
+As regras deverão ser armazenadas no banco de dados sempre que aplicável, em vez de permanecerem codificadas no frontend.
+
+Registre quem alterou cada configuração e quando.
+
+---
+
+# 19. DADOS DE DEMONSTRAÇÃO
+
+Implemente um modo de demonstração separado do ambiente real.
+
+Esse modo poderá incluir:
+
+- SDRs fictícios.
+- Tarefas fictícias.
+- Reuniões fictícias.
+- Metas configuráveis.
+- Eventos de calendário fictícios.
+- Exemplos de sobrecarga.
+- Exemplos de GAP de agendamentos.
+- Exemplos de replanejamento.
+
+O objetivo é permitir visualizar todas as telas antes de conectar o HubSpot e o Microsoft 365.
+
+Sinalize claramente que os dados são demonstrativos.
+
+Não misture registros fictícios e reais na mesma consulta.
+
+Não utilize nomes ou dados pessoais reais da equipe como dados de demonstração.
+
+---
+
+# 20. CRITÉRIOS DE ACEITE
+
+Considere a aplicação funcional quando os seguintes requisitos forem atendidos:
+
+1. Existe autenticação e diferenciação de perfis ADMIN e SDR.
+2. O administrador consegue visualizar indicadores consolidados da equipe.
+3. O SDR consegue visualizar somente seus próprios indicadores.
+4. O dashboard apresenta tarefas pendentes, atrasadas e vencendo no dia.
+5. O sistema calcula carga estimada e capacidade disponível.
+6. Existe um painel de metas e GAP D0.
+7. Existe um painel de reuniões agendadas versus realizadas.
+8. A contabilização distingue agendamento, realização, cancelamento e no-show.
+9. Existe uma rotina diária calculada a partir da agenda e das tarefas.
+10. O motor distribui atividades por blocos e respeita as durações.
+11. O sistema identifica sobrecarga.
+12. O sistema recomenda replanejamento.
+13. As integrações possuem estados reais de conexão e sincronização.
+14. Os erros de integração são registrados e apresentados.
+15. O modo de demonstração funciona sem credenciais externas.
+16. Os dados reais não são misturados com os dados demonstrativos.
+17. A aplicação possui layout responsivo.
+18. Os cálculos críticos possuem testes automatizados.
+19. As operações sensíveis são executadas no backend.
+20. As permissões são verificadas no backend e no banco de dados quando suportado.
+
+---
+
+# 21. ORDEM DE EXECUÇÃO
+
+Execute o desenvolvimento nesta ordem, sem deixar de construir as áreas previstas:
+
+**Etapa 1:** estruturar o projeto, banco de dados, autenticação, perfis e navegação.
+
+**Etapa 2:** implementar o dashboard administrativo com indicadores, tabelas e gráficos.
+
+**Etapa 3:** implementar o dashboard individual do SDR.
+
+**Etapa 4:** implementar metas, GAP D0 e cálculos de agendamentos.
+
+**Etapa 5:** implementar o módulo de reuniões agendadas versus realizadas.
+
+**Etapa 6:** implementar tarefas, capacidade produtiva e motor de planejamento.
+
+**Etapa 7:** implementar a rotina diária e o replanejamento.
+
+**Etapa 8:** implementar as integrações com HubSpot e Microsoft Graph.
+
+**Etapa 9:** implementar notificações e integração com Teams, quando disponíveis.
+
+**Etapa 10:** implementar relatórios, auditoria, configurações e exportação.
+
+**Etapa 11:** testar os fluxos, corrigir os problemas e validar os critérios de aceite.
+
+Desenvolva todas as etapas. Se alguma integração depender de autenticação ou configuração externa, continue implementando o restante da aplicação e deixe a integração pronta para conexão.
+
+---
+
+# 22. INSTRUÇÃO FINAL
+
+**Comece agora a construir a aplicação Welucci SDR Intelligence.**
+
+Não responda apenas com um plano de trabalho. Implemente a aplicação diretamente no ambiente disponível.
+
+Primeiro, estabeleça a estrutura do projeto e o modelo de dados. Em seguida, construa todas as páginas, componentes, regras de cálculo, autenticação e fluxos descritos.
+
+Utilize dados demonstrativos claramente identificados para permitir testar a interface e os cálculos antes da conexão com os sistemas reais.
+
+Priorize uma experiência completa e funcional, com navegação entre telas, filtros, tabelas, gráficos, cálculos, configurações e estados de integração.
+
+Depois de construir, execute os testes disponíveis e corrija os erros identificados.
+
+Ao finalizar, apresente:
+
+- Funcionalidades implementadas.
+- Rotas e telas disponíveis.
+- Estrutura do banco de dados.
+- Testes realizados e resultados.
+- Integrações realmente conectadas.
+- Integrações que dependem de credenciais ou permissões.
+- Variáveis de ambiente necessárias, sem incluir segredos.
+- Passos exatos para conectar o HubSpot e o Microsoft 365.
+- Limitações conhecidas.
+- Próxima ação necessária para colocar a aplicação em produção.
+
+Não declare que a aplicação está em produção enquanto autenticação, permissões, integrações e persistência não tiverem sido validadas.
+
+O objetivo final é disponibilizar uma aplicação real para que a gestão da Welucci acompanhe o desempenho e a capacidade de toda a equipe, enquanto cada SDR visualiza seus próprios números, seu GAP de reuniões, suas pendências e uma rotina diária inteligente, adaptada à agenda e à carga de trabalho reais.

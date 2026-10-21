@@ -1,0 +1,120 @@
+{
+  "entities": {
+    "SdrProfile": {
+      "title": "SdrProfile",
+      "description": "Perfil de SDR/BDR da Welucci com escopo e metas",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "avatar": { "type": "string" },
+        "role": { "type": "string" },
+        "scope": { "type": "string" },
+        "dailyMeetingGoal": { "type": "number" },
+        "weeklyMeetingGoal": { "type": "number" },
+        "monthlyMeetingGoal": { "type": "number" },
+        "status": { "type": "string" },
+        "shiftStart": { "type": "string" },
+        "shiftEnd": { "type": "string" },
+        "lunchBreakStart": { "type": "string" },
+        "lunchBreakMinutes": { "type": "number" }
+      },
+      "required": ["id", "name", "email", "scope", "dailyMeetingGoal"]
+    },
+    "Goal": {
+      "title": "Goal",
+      "description": "Meta individual de SDR ou global da equipe",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sdrId": { "type": "string" },
+        "type": { "type": "string" },
+        "period": { "type": "string" },
+        "targetMeetings": { "type": "number" },
+        "completedMeetings": { "type": "number" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "scope": { "type": "string" }
+      },
+      "required": ["id", "type", "period", "targetMeetings", "completedMeetings", "startDate", "endDate"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Tarefa operacional da rotina do SDR",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sdrId": { "type": "string" },
+        "title": { "type": "string" },
+        "type": { "type": "string" },
+        "priority": { "type": "string" },
+        "status": { "type": "string" },
+        "dueTime": { "type": "string" },
+        "estimatedMinutes": { "type": "number" },
+        "relatedLead": { "type": "string" },
+        "relatedAccount": { "type": "string" },
+        "source": { "type": "string" }
+      },
+      "required": ["id", "sdrId", "title", "type", "priority", "status"]
+    },
+    "Meeting": {
+      "title": "Meeting",
+      "description": "Reunião comercial sincronizada do HubSpot",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sdrId": { "type": "string" },
+        "title": { "type": "string" },
+        "prospectName": { "type": "string" },
+        "company": { "type": "string" },
+        "scheduledAt": { "type": "string" },
+        "durationMinutes": { "type": "number" },
+        "status": { "type": "string" },
+        "source": { "type": "string" },
+        "meetUrl": { "type": "string" },
+        "attendedAt": { "type": "string" },
+        "d0GapContribution": { "type": "number" }
+      },
+      "required": ["id", "sdrId", "title", "scheduledAt", "status", "source"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Notificação operacional do funil e distribuição",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sdrId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "read": { "type": "boolean" },
+        "link": { "type": "string" }
+      },
+      "required": ["id", "title", "message", "type", "timestamp", "read"]
+    }
+  },
+  "firestore": {
+    "/sdr_profiles/{profileId}": {
+      "schema": { "$ref": "#/entities/SdrProfile" },
+      "description": "Coleção de perfis de SDRs/BDRs e metas"
+    },
+    "/goals/{goalId}": {
+      "schema": { "$ref": "#/entities/Goal" },
+      "description": "Coleção de metas operacionais e do time"
+    },
+    "/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/Task" },
+      "description": "Tarefas diárias dos SDRs"
+    },
+    "/meetings/{meetingId}": {
+      "schema": { "$ref": "#/entities/Meeting" },
+      "description": "Reuniões integradas do HubSpot"
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "Notificações do time Welucci"
+    }
+  }
+}
