@@ -42,16 +42,16 @@ export const TeamManagementView: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="bg-white p-6 rounded-xl border border-[#d1d5d6]/70 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white p-5 sm:p-6 rounded-xl border border-[#d1d5d6]/70 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="p-2 rounded-lg bg-[#14262d] text-[#d1d5d6]">
+          <div className="flex items-center gap-2.5">
+            <span className="p-2 sm:p-2.5 rounded-lg bg-[#14262d] text-[#d1d5d6] shrink-0">
               <Users className="w-5 h-5 text-amber-300" />
             </span>
             <div>
-              <h2 className="text-xl font-bold text-[#14262d] tracking-tight">
+              <h2 className="text-lg sm:text-xl font-bold text-[#14262d] tracking-tight">
                 Gestão da Equipe Comercial & Acessos
               </h2>
               <p className="text-xs text-[#6a797c] mt-0.5">
@@ -63,7 +63,7 @@ export const TeamManagementView: React.FC = () => {
 
         <button
           onClick={() => setIsNewUserModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold bg-[#14262d] text-white hover:bg-[#1a333c] shadow-xs transition-colors cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold bg-[#14262d] text-white hover:bg-[#1a333c] shadow-xs transition-colors cursor-pointer w-fit"
         >
           <UserPlus className="w-4 h-4 text-amber-300" />
           <span>Cadastrar Novo Usuário</span>
@@ -81,15 +81,15 @@ export const TeamManagementView: React.FC = () => {
       )}
 
       {/* Admin Profile Card */}
-      <div className="bg-[#14262d] text-white rounded-xl p-5 shadow-sm border border-[#1e343c] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-[#14262d] text-white rounded-xl p-5 shadow-sm border border-[#1e343c] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-400 to-emerald-400 p-0.5 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-400 to-emerald-400 p-0.5 flex items-center justify-center shrink-0">
             <div className="w-full h-full bg-[#14262d] rounded-[10px] flex items-center justify-center font-bold text-base text-white">
               JB
             </div>
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h3 className="font-bold text-base text-white">
                 {currentUser.name}
               </h3>
@@ -103,7 +103,7 @@ export const TeamManagementView: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-[#d1d5d6]">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-[#d1d5d6]">
           <div className="bg-white/10 px-3 py-1.5 rounded-lg border border-white/15">
             <span className="text-[10px] text-slate-300 block">HubSpot Owner</span>
             <span className="font-mono text-white font-medium">{currentUser.hubspotOwnerId}</span>
@@ -117,7 +117,7 @@ export const TeamManagementView: React.FC = () => {
 
       {/* SDR Team Table */}
       <div className="bg-white rounded-xl border border-[#d1d5d6]/70 shadow-xs overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#d1d5d6]/60 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-4 border-b border-[#d1d5d6]/60 flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-[#14262d] uppercase tracking-wide">
               Membros da Equipe ({sdrUsers.length})
@@ -132,12 +132,12 @@ export const TeamManagementView: React.FC = () => {
             className="text-xs font-semibold text-[#14262d] hover:underline flex items-center gap-1 cursor-pointer"
           >
             <UserPlus className="w-3.5 h-3.5 text-[#14262d]" />
-            <span>Adicionar Colaborador</span>
+            <span className="hidden sm:inline">Adicionar Colaborador</span>
           </button>
         </div>
 
         {sdrUsers.length === 0 ? (
-          <div className="p-12 text-center space-y-3">
+          <div className="p-8 sm:p-12 text-center space-y-3">
             <div className="w-12 h-12 mx-auto rounded-full bg-slate-100 text-[#6a797c] flex items-center justify-center">
               <Users className="w-6 h-6" />
             </div>
@@ -154,8 +154,13 @@ export const TeamManagementView: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <div className="p-4 sm:p-0">
+            {/* Mobile Swipe Notice */}
+            <div className="block sm:hidden text-[10px] font-semibold text-[#6a797c] text-right mb-2">
+              (Deslize para ver colunas ➔)
+            </div>
+            <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto">
+              <table className="w-full text-left text-xs min-w-[650px]">
               <thead>
                 <tr className="border-b border-[#d1d5d6] bg-[#f8fafb] text-[#14262d] font-semibold">
                   <th className="py-3 px-4">Nome & Contato</th>
@@ -245,6 +250,7 @@ export const TeamManagementView: React.FC = () => {
               </tbody>
             </table>
           </div>
+        </div>
         )}
       </div>
 

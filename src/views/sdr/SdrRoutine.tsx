@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   CalendarRange, Clock, CheckCircle2, AlertTriangle, 
-  Sparkles, RefreshCw, ChevronRight, Phone, ArrowRight, 
+  Sparkles, RefreshCw, ChevronLeft, ChevronRight, Phone, ArrowRight, 
   ExternalLink, Check, AlertCircle, Plus, Calendar, 
   Users, Trash2, ShieldCheck, Flame, BookOpen, Linkedin, 
   Volume2, CheckSquare, Coffee 
@@ -10,17 +10,49 @@ import { User, PlanningBlock, Task, SdrScope, CalendarEvent } from '../../types'
 import { store } from '../../services/store';
 import { getWeekdayInfo } from '../../services/calculationEngine';
 
+const stepDate = (currentDateStr: string, deltaDays: number): string => {
+  try {
+    const [y, m, d] = currentDateStr.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d + deltaDays, 12, 0, 0);
+    const nextY = dateObj.getFullYear();
+    const nextM = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const nextD = String(dateObj.getDate()).padStart(2, '0');
+    return `${nextY}-${nextM}-${nextD}`;
+  } catch {
+    return currentDateStr;
+  }
+};
+
 interface SdrRoutineProps {
   currentUser: User;
   onCompleteTask: (taskId: string) => void;
+  selectedDate?: string;
+  onSelectDate?: (date: string) => void;
 }
 
 export const SdrRoutine: React.FC<SdrRoutineProps> = ({
   currentUser,
   onCompleteTask,
+  selectedDate: propSelectedDate,
+  onSelectDate,
 }) => {
   // Day selection state for simulation & real inspection
-  const [selectedDate, setSelectedDate] = useState<string>('2026-10-21'); // Default Wednesday
+  const [selectedDate, setSelectedDate] = useState<string>(
+    propSelectedDate || store.getSelectedDate() || '2026-10-21'
+  );
+
+  // Sync state if prop changes from header
+  useEffect(() => {
+    if (propSelectedDate && propSelectedDate !== selectedDate) {
+      setSelectedDate(propSelectedDate);
+    }
+  }, [propSelectedDate]);
+
+  const handleDateChange = (dateStr: string) => {
+    setSelectedDate(dateStr);
+    store.setSelectedDate(dateStr);
+    if (onSelectDate) onSelectDate(dateStr);
+  };
   const [selectedScope, setSelectedScope] = useState<SdrScope>(
     currentUser.scope || 'Inbound Qualificação'
   );
@@ -95,7 +127,7 @@ export const SdrRoutine: React.FC<SdrRoutineProps> = ({
   };
 
   const handleDayPreset = (dateStr: string) => {
-    setSelectedDate(dateStr);
+    handleDateChange(dateStr);
   };
 
   return (
@@ -110,11 +142,17 @@ export const SdrRoutine: React.FC<SdrRoutineProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold text-[#14262d] tracking-tight">
-                  Fluxo Adaptativo da Rotina Diária
+                  Minha Rotina Operacional — {weekdayInfo.label} ({weekdayInfo.formattedDate})
                 </h2>
-                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-300">
-                  09h00 às 19h00
-                </span>
+                {selectedDate === '2026-10-21' ? (
+                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-300">
+                    Hoje
+                  </span>
+                ) : (
+                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-sky-50 text-sky-800 border border-sky-300">
+                    Data Filtrada
+                  </span>
+                )}
               </div>
               <p className="text-xs text-[#6a797c] mt-0.5">
                 Rotina conectada à agenda da Welucci (Teams / HubSpot) com divisão em blocos de atividades competentes e auto-ajuste inteligente.
@@ -168,39 +206,87 @@ export const SdrRoutine: React.FC<SdrRoutineProps> = ({
         </div>
       </div>
 
-      {/* Weekday Switcher Toolbar — Shows how rules adapt by day */}
-      <div className="bg-[#14262d] text-white p-4 rounded-xl shadow-xs border border-[#1e343c] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-amber-300" />
-          <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
-            Regras de Agenda por Dia da Semana:
-          </span>
-          <span className="text-xs text-[#d1d5d6] hidden sm:inline">
-            (Daily às 09h30 · Segundas sem Daily c/ Reunião de Equipe 10h · Quartas Reunião 14h · Sextas 1:1 10h)
-          </span>
+      {/* Weekday Switcher Toolbar — Shows how rules adapt by day with Date Picker */}
+      <div className="bg-[#14262d] text-white p-4 rounded-xl shadow-xs border border-[#1e343c] flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-amber-300 shrink-0" />
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
+              Escolher Data da Rotina:
+            </span>
+          </div>
+
+          {/* Interactive Date Picker & Steppers in SDR view */}
+          <div className="flex items-center gap-1.5 bg-[#0e1d23] p-1 rounded-lg border border-[#1e343c]">
+            <button
+              type="button"
+              onClick={() => handleDateChange('2026-10-21')}
+              className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors cursor-pointer ${
+                selectedDate === '2026-10-21'
+                  ? 'bg-amber-400 text-[#14262d] font-bold shadow-2xs'
+                  : 'text-[#d1d5d6] hover:text-white'
+              }`}
+              title="Voltar para a rotina de hoje (21/10/2026)"
+            >
+              Hoje
+            </button>
+
+            <div className="flex items-center bg-[#14262d] rounded border border-[#223d47] px-1 py-0.5">
+              <button
+                type="button"
+                onClick={() => handleDateChange(stepDate(selectedDate, -1))}
+                title="Dia anterior"
+                className="p-1 text-[#d1d5d6] hover:text-white hover:bg-[#1a333c] rounded cursor-pointer"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => e.target.value && handleDateChange(e.target.value)}
+                className="bg-transparent text-xs font-semibold text-white px-1.5 focus:outline-none cursor-pointer"
+                title="Selecione o dia que deseja ver a rotina"
+              />
+              <button
+                type="button"
+                onClick={() => handleDateChange(stepDate(selectedDate, 1))}
+                title="Próximo dia"
+                className="p-1 text-[#d1d5d6] hover:text-white hover:bg-[#1a333c] rounded cursor-pointer"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
 
+        {/* Quick Weekday Shortcut Buttons */}
         <div className="flex flex-wrap items-center gap-1.5">
           {[
-            { date: '2026-10-19', label: 'Segunda-feira', note: 'Reunião de Equipe 10h (Sem Daily)' },
-            { date: '2026-10-20', label: 'Terça-feira', note: 'Daily 09h30 + Cadência' },
-            { date: '2026-10-21', label: 'Quarta-feira', note: 'Daily 09h30 + Reunião de Trabalho 14h' },
-            { date: '2026-10-22', label: 'Quinta-feira', note: 'Daily 09h30 + Cadência' },
-            { date: '2026-10-23', label: 'Sexta-feira', note: 'Daily 09h30 + 1:1 Quinzenal 10h' },
+            { date: '2026-10-19', label: 'Segunda', note: 'Reunião de Equipe 10h (Sem Daily)' },
+            { date: '2026-10-20', label: 'Terça', note: 'Daily 09h30 + Cadência' },
+            { date: '2026-10-21', label: 'Quarta', note: 'Daily 09h30 + Reunião de Trabalho 14h' },
+            { date: '2026-10-22', label: 'Quinta', note: 'Daily 09h30 + Cadência' },
+            { date: '2026-10-23', label: 'Sexta', note: 'Daily 09h30 + 1:1 Quinzenal 10h' },
           ].map(day => (
             <button
               key={day.date}
               onClick={() => handleDayPreset(day.date)}
               title={day.note}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 selectedDate === day.date
-                  ? 'bg-amber-400 text-[#14262d] shadow-sm font-bold'
+                  ? 'bg-amber-400 text-[#14262d] shadow-sm font-bold ring-1 ring-amber-300'
                   : 'bg-[#0e1d23] text-[#d1d5d6] hover:bg-[#1a333c] hover:text-white border border-[#1e343c]'
               }`}
             >
               {day.label}
             </button>
           ))}
+
+          {!['2026-10-19', '2026-10-20', '2026-10-21', '2026-10-22', '2026-10-23'].includes(selectedDate) && (
+            <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-400 text-[#14262d] border border-amber-300 shadow-2xs">
+              📅 {weekdayInfo.label} ({weekdayInfo.formattedDate})
+            </span>
+          )}
         </div>
       </div>
 
@@ -228,7 +314,7 @@ export const SdrRoutine: React.FC<SdrRoutineProps> = ({
       )}
 
       {/* Competencies Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {selectedScope === 'Inbound Qualificação' ? (
           <>
             <div className="bg-white p-4 rounded-xl border border-amber-200 shadow-2xs">

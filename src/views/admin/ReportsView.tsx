@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileSpreadsheet, Download, Filter, Search, Calendar, CheckCircle2 } from 'lucide-react';
 import { store } from '../../services/store';
 
 export const ReportsView: React.FC = () => {
   const [filterSdr, setFilterSdr] = useState<string>('ALL');
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const unsub = store.subscribe(() => setTick(t => t + 1));
+    return () => unsub();
+  }, []);
+
   const sdrs = store.getSdrUsers();
   const teamKpi = store.getTeamKpiSummary();
   const isDemo = store.getIsDemoMode();
+  const selectedDate = store.getSelectedDate();
 
   const handleDownloadCsv = () => {
     const csvContent = store.exportTeamDataToCsv();
@@ -14,7 +22,7 @@ export const ReportsView: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `welucci_relatorio_produtividade_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `welucci_relatorio_produtividade_${selectedDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -23,18 +31,23 @@ export const ReportsView: React.FC = () => {
   const filteredSdrs = filterSdr === 'ALL' ? sdrs : sdrs.filter(s => s.id === filterSdr);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="bg-white p-6 rounded-xl border border-[#d1d5d6]/70 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white p-5 sm:p-6 rounded-xl border border-[#d1d5d6]/70 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="p-2 rounded-lg bg-[#14262d] text-[#d1d5d6]">
-              <FileSpreadsheet className="w-5 h-5" />
+          <div className="flex items-center gap-2.5">
+            <span className="p-2 sm:p-2.5 rounded-lg bg-[#14262d] text-[#d1d5d6] shrink-0">
+              <FileSpreadsheet className="w-5 h-5 text-amber-300" />
             </span>
             <div>
-              <h2 className="text-xl font-bold text-[#14262d] tracking-tight">
-                Relatórios Comerciais e Exportação
-              </h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-[#14262d] tracking-tight">
+                  Relatórios Comerciais e Exportação
+                </h2>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-[#14262d] border border-[#d1d5d6]">
+                  {selectedDate}
+                </span>
+              </div>
               <p className="text-xs text-[#6a797c] mt-0.5">
                 Consolidado de produtividade, taxa de comparecimento, atingimento de metas e GAP D0 com exportação compatível com Excel/Sheets.
               </p>
@@ -44,16 +57,16 @@ export const ReportsView: React.FC = () => {
 
         <button
           onClick={handleDownloadCsv}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold bg-[#14262d] text-white hover:bg-[#1c3640] transition-colors shadow-xs"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold bg-[#14262d] text-white hover:bg-[#1c3640] transition-colors shadow-xs cursor-pointer w-full sm:w-auto"
         >
-          <Download className="w-4 h-4 text-[#d1d5d6]" />
+          <Download className="w-4 h-4 text-amber-300" />
           <span>Exportar Relatório CSV</span>
         </button>
       </div>
 
       {/* Filter and Environment Bar */}
       <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="font-semibold text-[#14262d]">Filtrar por SDR:</span>
           <select
             value={filterSdr}
@@ -76,13 +89,23 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* Detailed Report Table */}
-      <div className="bg-white rounded-xl border border-[#d1d5d6]/70 p-6 shadow-xs space-y-4">
-        <h3 className="text-sm font-bold text-[#14262d] uppercase tracking-wide border-b border-[#d1d5d6]/50 pb-3">
-          Tabela Consolidada de Desempenho e Metas
-        </h3>
+      <div className="bg-white rounded-xl border border-[#d1d5d6]/70 p-4 sm:p-6 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-[#d1d5d6]/50 pb-3">
+          <h3 className="text-sm font-bold text-[#14262d] uppercase tracking-wide">
+            Tabela Consolidada de Desempenho e Metas
+          </h3>
+          <span className="text-[11px] text-[#6a797c] hidden sm:inline">
+            Status operacional do dia {selectedDate}
+          </span>
+        </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        {/* Mobile Swipe Notice */}
+        <div className="block sm:hidden text-[10px] font-semibold text-[#6a797c] text-right">
+          (Deslize para ver colunas ➔)
+        </div>
+
+        <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto">
+          <table className="w-full text-left text-xs min-w-[760px]">
             <thead>
               <tr className="border-b border-[#d1d5d6] bg-[#f8fafb] text-[#14262d] font-semibold">
                 <th className="py-3 px-3">SDR</th>
@@ -102,7 +125,7 @@ export const ReportsView: React.FC = () => {
               {filteredSdrs.map(sdr => {
                 const kpi = store.getSdrKpiSummary(sdr.id);
                 return (
-                  <tr key={sdr.id} className="hover:bg-[#f8fafb]">
+                  <tr key={sdr.id} className="hover:bg-[#f8fafb] transition-colors">
                     <td className="py-3 px-3 font-semibold text-[#14262d]">{sdr.name}</td>
                     <td className="py-3 px-3 text-[#6a797c]">{sdr.scope}</td>
                     <td className="py-3 px-3 text-center font-mono">{kpi.dailyGoal}</td>

@@ -1,7 +1,9 @@
+import React from 'react';
 import { 
   LayoutDashboard, Users, Clock, CalendarCheck2, Target, 
   CalendarRange, FileSpreadsheet, Network, Settings, 
-  ListTodo, UserCheck, History, Sparkles, ChevronDown, Bot, Flame 
+  ListTodo, UserCheck, History, Sparkles, ChevronDown, Bot, Flame,
+  Calendar, Activity, X
 } from 'lucide-react';
 import { User } from '../../types';
 
@@ -14,6 +16,8 @@ interface SidebarProps {
   isDemoMode: boolean;
   onToggleDemoMode: () => void;
   onOpenCopilot?: () => void;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -25,6 +29,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isDemoMode,
   onToggleDemoMode,
   onOpenCopilot,
+  isMobileOpen = false,
+  onCloseMobile,
 }) => {
   const isAdmin = currentUser.role === 'ADMIN';
 
@@ -38,7 +44,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'admin-planning', label: 'Planejamento Operacional', icon: CalendarRange },
     { id: 'admin-reports', label: 'Relatórios & Exportação', icon: FileSpreadsheet },
     { id: 'admin-hubspot', label: 'Integração HubSpot', icon: Flame, badge: 'Nativo' },
-    { id: 'admin-integrations', label: 'Integrações (CRM / M365)', icon: Network },
+    { id: 'admin-microsoft', label: 'Integração Microsoft 365', icon: Calendar, badge: 'Nativo' },
+    { id: 'admin-integrations', label: 'Status das Integrações', icon: Activity, badge: 'Saúde' },
     { id: 'admin-settings', label: 'Configurações', icon: Settings },
   ];
 
@@ -53,11 +60,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const navItems = isAdmin ? adminNav : sdrNav;
 
-  return (
-    <aside className="w-72 bg-[#14262d] text-white flex flex-col h-screen select-none shrink-0 border-r border-[#1e343c]">
+  const handleItemClick = (id: string) => {
+    onNavigate(id);
+    if (onCloseMobile) onCloseMobile();
+  };
+
+  const renderContent = (isMobile: boolean = false) => (
+    <>
       {/* Brand Header */}
-      <div className="p-5 border-b border-[#1e343c]">
-        <div className="flex items-center gap-3">
+      <div className="p-4 sm:p-5 border-b border-[#1e343c] flex items-center justify-between">
+        <div className="flex items-center gap-3 min-w-0">
           <img
             src="/assets/aistudio/images__2__615e057c.jpg"
             alt="Welucci Logo"
@@ -70,9 +82,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 B2B
               </span>
             </div>
-            <p className="text-xs text-[#d1d5d6]/70 mt-0.5">Unidade de Negócio B2B</p>
+            <p className="text-xs text-[#d1d5d6]/70 mt-0.5 truncate">Inteligência Comercial</p>
           </div>
         </div>
+
+        {isMobile && (
+          <button
+            onClick={onCloseMobile}
+            className="p-1.5 rounded-lg text-[#d1d5d6] hover:text-white hover:bg-[#1e343c] transition-colors cursor-pointer"
+            aria-label="Fechar menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Role & User Switcher Card */}
@@ -107,7 +129,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {isAdmin && onOpenCopilot && (
         <div className="p-3 border-b border-[#1e343c]">
           <button
-            onClick={onOpenCopilot}
+            onClick={() => {
+              onOpenCopilot();
+              if (onCloseMobile) onCloseMobile();
+            }}
             className="w-full flex items-center justify-between p-2.5 rounded-xl bg-gradient-to-r from-amber-400/15 via-[#1a333c] to-emerald-400/15 border border-amber-400/30 hover:border-amber-400 text-white transition-all shadow-xs group text-left cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
@@ -128,7 +153,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* Navigation Links */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
         <div className="px-3 pb-2 text-[11px] font-semibold tracking-wider text-[#6a797c] uppercase">
           {isAdmin ? 'Módulos Administrativos' : 'Área Operacional do SDR'}
         </div>
@@ -139,8 +164,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           return (
             <button
               key={item.id}
-              onClick={() => onNavigate(item.id)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              onClick={() => handleItemClick(item.id)}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                 isActive
                   ? 'bg-[#d1d5d6] text-[#14262d] shadow-sm font-semibold'
                   : 'text-[#d1d5d6] hover:bg-[#1c323a] hover:text-white'
@@ -178,7 +203,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <button
             onClick={onToggleDemoMode}
-            className={`text-[11px] font-semibold px-2 py-0.5 rounded transition-colors ${
+            className={`text-[11px] font-semibold px-2 py-0.5 rounded transition-colors cursor-pointer ${
               isDemoMode
                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'
                 : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
@@ -193,6 +218,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
             : 'Conexão ativa consultando APIs oficiais.'}
         </p>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop Persistent Sidebar */}
+      <aside className="hidden md:flex w-72 bg-[#14262d] text-white flex-col h-screen select-none shrink-0 border-r border-[#1e343c]">
+        {renderContent(false)}
+      </aside>
+
+      {/* Mobile Slide-Over Drawer */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex animate-in fade-in duration-200">
+          <div 
+            onClick={onCloseMobile}
+            className="fixed inset-0 bg-black/70 backdrop-blur-xs transition-opacity" 
+            aria-hidden="true"
+          />
+          <aside className="relative w-72 max-w-[85vw] bg-[#14262d] text-white flex flex-col h-full shadow-2xl z-10 select-none animate-in slide-in-from-left duration-250">
+            {renderContent(true)}
+          </aside>
+        </div>
+      )}
+    </>
   );
 };
+

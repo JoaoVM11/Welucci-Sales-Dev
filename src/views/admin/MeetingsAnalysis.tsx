@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CalendarCheck2, HelpCircle, CheckCircle2, 
   XCircle, UserX, TrendingUp, Calendar, ArrowUpRight 
@@ -7,8 +7,16 @@ import { store } from '../../services/store';
 
 export const MeetingsAnalysis: React.FC = () => {
   const [selectedRange, setSelectedRange] = useState<string>('Hoje');
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const unsub = store.subscribe(() => setTick(t => t + 1));
+    return () => unsub();
+  }, []);
+
   const meetings = store.getMeetings();
   const sdrs = store.getSdrUsers();
+  const selectedDate = store.getSelectedDate();
 
   const scheduled = meetings.filter(m => m.status === 'SCHEDULED');
   const held = meetings.filter(m => m.status === 'HELD');
@@ -22,18 +30,23 @@ export const MeetingsAnalysis: React.FC = () => {
   const cancellationRate = eligible > 0 ? Math.round((cancelled.length / eligible) * 100) : 0;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
       {/* View Header */}
-      <div className="bg-white p-6 rounded-xl border border-[#d1d5d6]/70 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white p-5 sm:p-6 rounded-xl border border-[#d1d5d6]/70 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="p-2 rounded-lg bg-[#14262d] text-[#d1d5d6]">
-              <CalendarCheck2 className="w-5 h-5" />
+          <div className="flex items-center gap-2.5">
+            <span className="p-2 sm:p-2.5 rounded-lg bg-[#14262d] text-[#d1d5d6] shrink-0">
+              <CalendarCheck2 className="w-5 h-5 text-amber-300" />
             </span>
             <div>
-              <h2 className="text-xl font-bold text-[#14262d] tracking-tight">
-                Módulo de Reuniões: Agendadas vs Realizadas
-              </h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-[#14262d] tracking-tight">
+                  Módulo de Reuniões: Agendadas vs Realizadas
+                </h2>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-[#14262d] border border-[#d1d5d6]">
+                  Data: {selectedDate}
+                </span>
+              </div>
               <p className="text-xs text-[#6a797c] mt-0.5">
                 Diferenciação obrigatória entre agendamento, realização, cancelamento e no-show com dados oficiais do HubSpot CRM.
               </p>
@@ -42,14 +55,14 @@ export const MeetingsAnalysis: React.FC = () => {
         </div>
 
         {/* Range Selector */}
-        <div className="flex items-center bg-[#f8fafb] p-1 rounded-lg border border-[#d1d5d6] text-xs">
+        <div className="flex flex-wrap items-center bg-[#f8fafb] p-1 rounded-lg border border-[#d1d5d6] text-xs">
           {['Hoje', 'Esta Semana', 'Este Mês', 'Mês Anterior'].map((r) => (
             <button
               key={r}
               onClick={() => setSelectedRange(r)}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-md font-medium transition-colors cursor-pointer ${
                 selectedRange === r
-                  ? 'bg-[#14262d] text-white shadow-xs'
+                  ? 'bg-[#14262d] text-white shadow-xs font-semibold'
                   : 'text-[#6a797c] hover:text-[#14262d]'
               }`}
             >
@@ -60,41 +73,43 @@ export const MeetingsAnalysis: React.FC = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-4 sm:p-5 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase text-[#6a797c] tracking-wider">Agendadas</span>
-            <CalendarCheck2 className="w-4 h-4 text-blue-600" />
+            <span className="text-[11px] font-bold uppercase text-[#6a797c] tracking-wider">Agendadas Totais</span>
+            <CalendarCheck2 className="w-4 h-4 text-sky-600" />
           </div>
           <p className="text-2xl font-bold font-mono text-[#14262d] mt-2">{meetings.length}</p>
-          <p className="text-[11px] text-[#6a797c] mt-1">{scheduled.length} futuras ativas</p>
+          <p className="text-[11px] text-[#6a797c] mt-1">{scheduled.length} futuras ativas na base</p>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
+        <div className="bg-white p-4 sm:p-5 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase text-[#6a797c] tracking-wider">Realizadas</span>
+            <span className="text-[11px] font-bold uppercase text-[#6a797c] tracking-wider">Realizadas</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           </div>
           <p className="text-2xl font-bold font-mono text-emerald-600 mt-2">{held.length}</p>
-          <p className="text-[11px] text-emerald-700 font-medium mt-1">{attendanceRate}% comparecimento</p>
+          <div className="flex items-center gap-1.5 mt-1">
+            <span className="text-[11px] text-emerald-700 font-semibold">{attendanceRate}% comparecimento</span>
+          </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
+        <div className="bg-white p-4 sm:p-5 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase text-[#6a797c] tracking-wider">No-Shows</span>
+            <span className="text-[11px] font-bold uppercase text-[#6a797c] tracking-wider">No-Shows</span>
             <UserX className="w-4 h-4 text-rose-600" />
           </div>
           <p className="text-2xl font-bold font-mono text-rose-600 mt-2">{noShow.length}</p>
-          <p className="text-[11px] text-rose-700 font-medium mt-1">{noShowRate}% do total elegível</p>
+          <p className="text-[11px] text-rose-700 font-semibold mt-1">{noShowRate}% do total elegível</p>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
+        <div className="bg-white p-4 sm:p-5 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase text-[#6a797c] tracking-wider">Canceladas</span>
+            <span className="text-[11px] font-bold uppercase text-[#6a797c] tracking-wider">Canceladas</span>
             <XCircle className="w-4 h-4 text-amber-600" />
           </div>
           <p className="text-2xl font-bold font-mono text-amber-600 mt-2">{cancelled.length}</p>
-          <p className="text-[11px] text-[#6a797c] mt-1">{cancellationRate}% cancelamento</p>
+          <p className="text-[11px] text-amber-700 font-semibold mt-1">{cancellationRate}% cancelamento</p>
         </div>
       </div>
 
@@ -111,13 +126,23 @@ export const MeetingsAnalysis: React.FC = () => {
       </div>
 
       {/* Tabela de Reuniões por SDR */}
-      <div className="bg-white rounded-xl border border-[#d1d5d6]/70 p-6 shadow-xs space-y-4">
-        <h3 className="text-sm font-bold text-[#14262d] uppercase tracking-wide border-b border-[#d1d5d6]/50 pb-3">
-          Conversão e Comparecimento por SDR
-        </h3>
+      <div className="bg-white rounded-xl border border-[#d1d5d6]/70 p-4 sm:p-6 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-[#d1d5d6]/50 pb-3">
+          <h3 className="text-sm font-bold text-[#14262d] uppercase tracking-wide">
+            Conversão e Comparecimento por SDR
+          </h3>
+          <span className="text-[11px] text-[#6a797c] hidden sm:inline">
+            Metas calculadas para o dia selecionado ({selectedDate})
+          </span>
+        </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        {/* Mobile Swipe Notice */}
+        <div className="block sm:hidden text-[10px] font-semibold text-[#6a797c] text-right">
+          (Deslize para ver colunas ➔)
+        </div>
+
+        <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto">
+          <table className="w-full text-left text-xs min-w-[640px]">
             <thead>
               <tr className="border-b border-[#d1d5d6] bg-[#f8fafb] text-[#14262d] font-semibold">
                 <th className="py-3 px-3">SDR</th>
@@ -126,7 +151,7 @@ export const MeetingsAnalysis: React.FC = () => {
                 <th className="py-3 px-3 text-center">Canceladas</th>
                 <th className="py-3 px-3 text-center">No-Shows</th>
                 <th className="py-3 px-3 text-center">Taxa de Comparecimento</th>
-                <th className="py-3 px-3 text-center">Meta Agendamento</th>
+                <th className="py-3 px-3 text-center">Meta D0 ({selectedDate})</th>
                 <th className="py-3 px-3 text-center">% Meta Atingida</th>
               </tr>
             </thead>
@@ -140,11 +165,11 @@ export const MeetingsAnalysis: React.FC = () => {
                 const sRate = sEligible > 0 ? Math.round((sHeld / sEligible) * 100) : 0;
                 const g = store.getSdrGoal(sdr.id);
                 const dailyGoal = g?.dailyScheduledMeetings || 4;
-                const bookedD0 = sdrMeetings.filter(m => m.bookedAt === '2026-10-21').length;
+                const bookedD0 = sdrMeetings.filter(m => m.bookedAt === selectedDate).length;
                 const attainment = Math.round((bookedD0 / dailyGoal) * 100);
 
                 return (
-                  <tr key={sdr.id} className="hover:bg-[#f8fafb]">
+                  <tr key={sdr.id} className="hover:bg-[#f8fafb] transition-colors">
                     <td className="py-3 px-3 font-medium text-[#14262d]">
                       <p className="font-semibold">{sdr.name}</p>
                       <p className="text-[10px] text-[#6a797c]">{sdr.scope}</p>
@@ -156,7 +181,7 @@ export const MeetingsAnalysis: React.FC = () => {
                     <td className="py-3 px-3 text-center">
                       <span className="font-mono font-bold text-[#14262d]">{sRate}%</span>
                     </td>
-                    <td className="py-3 px-3 text-center font-mono">{dailyGoal}</td>
+                    <td className="py-3 px-3 text-center font-mono font-bold text-[#14262d]">{dailyGoal}</td>
                     <td className="py-3 px-3 text-center font-mono font-bold text-emerald-600">
                       {attainment}%
                     </td>

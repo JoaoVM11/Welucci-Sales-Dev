@@ -20,27 +20,29 @@ export const SdrTasks: React.FC<SdrTasksProps> = ({
 
   const tasks = store.getTasks({ ownerId: currentUser.id });
 
+  const activeDate = store.getSelectedDate() || '2026-10-21';
+
   const filteredTasks = tasks.filter((t) => {
     if (filterStatus !== 'ALL') {
       if (filterStatus === 'PENDING' && t.status === 'COMPLETED') return false;
       if (filterStatus === 'COMPLETED' && t.status !== 'COMPLETED') return false;
-      if (filterStatus === 'OVERDUE' && !(t.status !== 'COMPLETED' && t.dueAt < '2026-10-21T00:00:00')) return false;
+      if (filterStatus === 'OVERDUE' && !(t.status !== 'COMPLETED' && t.dueAt < `${activeDate}T00:00:00`)) return false;
     }
     if (filterType !== 'ALL' && t.taskType !== filterType) return false;
     return true;
   });
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="bg-white p-6 rounded-xl border border-[#d1d5d6]/70 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white p-5 sm:p-6 rounded-xl border border-[#d1d5d6]/70 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="p-2 rounded-lg bg-[#14262d] text-[#d1d5d6]">
               <ListTodo className="w-5 h-5 text-amber-300" />
             </span>
             <div>
-              <h2 className="text-xl font-bold text-[#14262d] tracking-tight">
+              <h2 className="text-lg sm:text-xl font-bold text-[#14262d] tracking-tight">
                 Minhas Tarefas & Cadências Comerciais
               </h2>
               <p className="text-xs text-[#6a797c] mt-0.5">
@@ -50,7 +52,7 @@ export const SdrTasks: React.FC<SdrTasksProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#14262d] text-white shadow-2xs">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#14262d] text-white shadow-2xs self-start md:self-auto">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
           <span>Cadências & Touch Points HubSpot</span>
         </div>
@@ -58,16 +60,16 @@ export const SdrTasks: React.FC<SdrTasksProps> = ({
 
       {/* Filter Tabs */}
       <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-[#14262d]">Status:</span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="font-bold text-[#14262d] mr-1">Status:</span>
           {['PENDING', 'OVERDUE', 'COMPLETED', 'ALL'].map((st) => (
             <button
               key={st}
               onClick={() => setFilterStatus(st)}
-              className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
                 filterStatus === st
-                  ? 'bg-[#14262d] text-white'
-                  : 'bg-[#f8fafb] text-[#6a797c] hover:text-[#14262d]'
+                  ? 'bg-[#14262d] text-white shadow-2xs'
+                  : 'bg-[#f8fafb] text-[#6a797c] hover:text-[#14262d] border border-[#d1d5d6]'
               }`}
             >
               {st === 'PENDING' ? 'Pendentes' : st === 'OVERDUE' ? 'Atrasadas' : st === 'COMPLETED' ? 'Concluídas' : 'Todas'}
@@ -76,11 +78,11 @@ export const SdrTasks: React.FC<SdrTasksProps> = ({
         </div>
 
         <div className="flex items-center gap-2 text-xs">
-          <span className="font-semibold text-[#14262d]">Tipo:</span>
+          <span className="font-bold text-[#14262d]">Tipo:</span>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="bg-[#f8fafb] border border-[#d1d5d6] rounded-md px-2.5 py-1.5 text-xs text-[#14262d] focus:outline-none"
+            className="bg-[#f8fafb] border border-[#d1d5d6] rounded-lg px-2.5 py-1.5 text-xs text-[#14262d] focus:outline-none cursor-pointer"
           >
             <option value="ALL">Todos os Tipos</option>
             <option value="TOUCH_POINT">Touch Points</option>
@@ -101,7 +103,7 @@ export const SdrTasks: React.FC<SdrTasksProps> = ({
         ) : (
           filteredTasks.map((task) => {
             const isCompleted = task.status === 'COMPLETED';
-            const isOverdue = !isCompleted && task.dueAt < '2026-10-21T00:00:00';
+            const isOverdue = !isCompleted && task.dueAt < `${activeDate}T00:00:00`;
             const isSlaCritical = task.priority === 'CRITICAL_SLA';
 
             return (

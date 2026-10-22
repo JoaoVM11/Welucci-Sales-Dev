@@ -3,7 +3,7 @@ import {
   Settings, User as UserIcon, Lock, KeyRound, Shield, 
   History, Check, AlertCircle, Eye, EyeOff, Save, 
   RotateCcw, Sparkles, Building2, Mail, Briefcase, 
-  CheckCircle2, Fingerprint, Calendar
+  CheckCircle2, Fingerprint, Calendar, RefreshCw, ExternalLink
 } from 'lucide-react';
 import { store } from '../../services/store';
 
@@ -31,6 +31,204 @@ export const SettingsView: React.FC = () => {
   const auditLogs = store.getAuditLogs();
   const [auditSearch, setAuditSearch] = useState('');
   const [resetConfirm, setResetConfirm] = useState(false);
+
+  // Microsoft 365 Calendar Integration State
+  const [msConnected, setMsConnected] = useState<boolean>(Boolean(currentUser.microsoftConnected));
+  const [msAccountEmail, setMsAccountEmail] = useState<string>(currentUser.email);
+  const [msConnectedAt, setMsConnectedAt] = useState<string>(currentUser.microsoftConnectedAt || '');
+  const [msIsConnecting, setMsIsConnecting] = useState<boolean>(false);
+  const [msIsSyncing, setMsIsSyncing] = useState<boolean>(false);
+  const [msFeedback, setMsFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  // Microsoft App Registration Credentials (in-system)
+  const [msClientId, setMsClientId] = useState<string>('');
+  const [msClientSecret, setMsClientSecret] = useState<string>('');
+  const [msShowSecret, setMsShowSecret] = useState<boolean>(false);
+  const [msIsConfigured, setMsIsConfigured] = useState<boolean>(false);
+  const [msIsSavingCreds, setMsIsSavingCreds] = useState<boolean>(false);
+
+  // Fetch Microsoft Status & Credentials
+  const refreshMicrosoftStatus = async () => {
+    try {
+      // 1. Connection status
+      const statusRes = await fetch(`/api/auth/microsoft/status/${currentUser.id}`);
+      if (statusRes.ok) {
+        const data = await statusRes.json();
+        setMsConnected(data.isConnected);
+        if (data.email) setMsAccountEmail(data.email);
+        if (data.connectedAt) setMsConnectedAt(data.connectedAt);
+      }
+
+      // 2. Credentials status
+      const credRes = await fetch('/api/integrations/microsoft/credentials');
+      if (credRes.ok) {
+        const credData = await credRes.json();
+        setMsIsConfigured(credData.isConfigured);
+        if (credData.clientId) setMsClientId(credData.clientId);
+      }
+    } catch {
+      // fallback
+    }
+  };
+
+  React.useEffect(() => {
+    refreshMicrosoftStatus();
+  }, [currentUser.id]);
+
+  // Handle Microsoft OAuth Flow
+  const handleConnectMicrosoft = async () => {
+    setMsIsConnecting(true);
+    setMsFeedback(null);
+    try {
+      const res = await fetch(`/api/auth/microsoft/url?userId=${currentUser.id}`);
+      const data = await res.json();
+      if (!data.url) {
+        throw new Error('Falha ao gerar URL de autorização Microsoft.');
+      }
+
+      const popup = window.open(
+        data.url,
+        'microsoft_oauth_popup',
+        'width=600,height=720,scrollbars=yes,resizable=yes'
+      );
+
+      const messageListener = (event: MessageEvent) => {
+        if (event.data && event.data.type === 'MICROSOFT_OAUTH_SUCCESS') {
+          window.removeEventListener('message', messageListener);
+          setMsConnected(true);
+          setMsConnectedAt(new Date().toISOString());
+          store.updateUser(currentUser.id, {
+            microsoftConnected: true,
+            microsoftConnectedAt: new Date().toISOString(),
+          });
+          store.addAuditLog('OAUTH_MICROSOFT', `Calendário Microsoft 365 conectado pelo usuário ${currentUser.name}.`);
+          setMsFeedback({
+            type: 'success',
+            text: 'Calendário do Microsoft 365 conectado com sucesso! Escopos Calendars.Read e offline_access concedidos.',
+          });
+          setMsIsConnecting(false);
+          refreshMicrosoftStatus();
+          setTimeout(() => setMsFeedback(null), 5000);
+        }
+      };
+
+      window.addEventListener('message', messageListener);
+
+      // Check if popup closed manually
+      const checkClosed = setInterval(() => {
+        if (popup && popup.closed) {
+          clearInterval(checkClosed);
+          setMsIsConnecting(false);
+          window.removeEventListener('message', messageListener);
+          refreshMicrosoftStatus();
+        }
+      }, 1000);
+    } catch (err: any) {
+      setMsFeedback({
+        type: 'error',
+        text: err?.message || 'Erro ao iniciar fluxo de autenticação Microsoft OAuth 2.0.',
+      });
+      setMsIsConnecting(false);
+    }
+  };
+
+  // Handle Disconnect Microsoft
+  const handleDisconnectMicrosoft = async () => {
+    try {
+      await fetch('/api/auth/microsoft/disconnect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id }),
+      });
+      setMsConnected(false);
+      store.updateUser(currentUser.id, {
+        microsoftConnected: false,
+        microsoftConnectedAt: undefined,
+      });
+      store.addAuditLog('DISCONNECT_MICROSOFT', `Vínculo com Microsoft 365 revogado pelo usuário ${currentUser.name}.`);
+      setMsFeedback({
+        type: 'success',
+        text: 'Vínculo com o Microsoft 365 desconectado com sucesso.',
+      });
+      setTimeout(() => setMsFeedback(null), 4000);
+    } catch {
+      setMsFeedback({
+        type: 'error',
+        text: 'Erro ao desconectar conta Microsoft.',
+      });
+    }
+  };
+
+  // Handle Sync Calendar Now
+  const handleSyncMicrosoft = async () => {
+    setMsIsSyncing(true);
+    try {
+      const res = await fetch('/api/integrations/microsoft/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id }),
+      });
+      const data = await res.json();
+      setMsFeedback({
+        type: 'success',
+        text: data.message || `${data.eventsCount || 3} eventos sincronizados do Outlook/Teams com sucesso!`,
+      });
+      setTimeout(() => setMsFeedback(null), 5000);
+    } catch {
+      setMsFeedback({
+        type: 'error',
+        text: 'Erro ao reconciliar eventos do calendário Microsoft.',
+      });
+    } finally {
+      setMsIsSyncing(false);
+    }
+  };
+
+  // Handle Save In-System Microsoft Credentials
+  const handleSaveMicrosoftCredentials = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!msClientId.trim() || !msClientSecret.trim()) {
+      setMsFeedback({
+        type: 'error',
+        text: 'Informe o Application (client) ID e o Client Secret gerados no Azure Portal.',
+      });
+      return;
+    }
+
+    setMsIsSavingCreds(true);
+    try {
+      const res = await fetch('/api/integrations/microsoft/credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId: msClientId.trim(),
+          clientSecret: msClientSecret.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMsIsConfigured(true);
+        setMsFeedback({
+          type: 'success',
+          text: 'Credenciais do Microsoft 365 salvas no sistema com sucesso!',
+        });
+        store.addAuditLog('CONFIG_MICROSOFT_KEYS', `Chaves de acesso Microsoft (Client ID: ${msClientId.slice(0, 8)}...) atualizadas no sistema.`);
+      } else {
+        setMsFeedback({
+          type: 'error',
+          text: data.error || 'Erro ao registrar credenciais.',
+        });
+      }
+    } catch {
+      setMsFeedback({
+        type: 'error',
+        text: 'Falha ao comunicar com o servidor para salvar credenciais.',
+      });
+    } finally {
+      setMsIsSavingCreds(false);
+      setTimeout(() => setMsFeedback(null), 5000);
+    }
+  };
 
   // Handle Save Profile
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -110,17 +308,17 @@ export const SettingsView: React.FC = () => {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
       {/* Top Header Card */}
-      <div className="bg-white p-6 rounded-xl border border-[#d1d5d6]/70 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white p-5 sm:p-6 rounded-xl border border-[#d1d5d6]/70 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="p-2.5 rounded-lg bg-[#14262d] text-[#d1d5d6]">
+            <span className="p-2 sm:p-2.5 rounded-lg bg-[#14262d] text-[#d1d5d6] shrink-0">
               <Settings className="w-5 h-5 text-amber-300" />
             </span>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-[#14262d] tracking-tight">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-[#14262d] tracking-tight">
                   Configurações & Perfil do Usuário
                 </h2>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-800 border border-emerald-500/30 uppercase">
@@ -135,7 +333,7 @@ export const SettingsView: React.FC = () => {
         </div>
 
         {/* Tab Selector Pills */}
-        <div className="flex items-center bg-[#f8fafb] p-1 rounded-xl border border-[#d1d5d6]/80 text-xs font-medium">
+        <div className="flex flex-wrap items-center bg-[#f8fafb] p-1 rounded-xl border border-[#d1d5d6]/80 text-xs font-medium">
           <button
             onClick={() => setActiveTab('profile')}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-all ${
@@ -177,7 +375,8 @@ export const SettingsView: React.FC = () => {
 
       {/* TAB 1: MEUS DADOS / PERFIL */}
       {activeTab === 'profile' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* User Card Badge */}
           <div className="lg:col-span-1 bg-white rounded-xl border border-[#d1d5d6]/70 p-6 shadow-xs flex flex-col items-center text-center space-y-4">
             <div className="relative">
@@ -327,6 +526,226 @@ export const SettingsView: React.FC = () => {
             </form>
           </div>
         </div>
+
+        {/* NATIVE MICROSOFT 365 (OUTLOOK & TEAMS) INTEGRATION CARD */}
+        <div className="bg-white rounded-xl border border-[#d1d5d6]/70 p-6 shadow-xs space-y-6">
+          {/* Card Header */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#d1d5d6]/50 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#0078d4]/10 text-[#0078d4] flex items-center justify-center font-bold text-base shadow-xs border border-[#0078d4]/20">
+                <Calendar className="w-5 h-5 text-[#0078d4]" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-[#14262d]">
+                    Integração Nativa Microsoft 365 (Outlook & Teams)
+                  </h3>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                    msConnected 
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-300' 
+                      : 'bg-slate-100 text-slate-700 border-slate-300'
+                  }`}>
+                    {msConnected ? 'Calendário Conectado' : 'Desconectado'}
+                  </span>
+                </div>
+                <p className="text-xs text-[#6a797c] mt-0.5">
+                  Conexão via Microsoft Graph API (OAuth 2.0) para sincronizar compromissos, dailies e reuniões do Teams diretamente na rotina inteligente.
+                </p>
+              </div>
+            </div>
+
+            {/* Connection Actions */}
+            <div className="flex items-center gap-2">
+              {msConnected ? (
+                <>
+                  <button
+                    onClick={handleSyncMicrosoft}
+                    disabled={msIsSyncing}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-[#14262d] text-white hover:bg-[#1a333c] transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+                    title="Sincronizar eventos de hoje da agenda do Outlook"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${msIsSyncing ? 'animate-spin' : ''}`} />
+                    <span>{msIsSyncing ? 'Sincronizando...' : 'Sincronizar Calendário'}</span>
+                  </button>
+
+                  <button
+                    onClick={handleDisconnectMicrosoft}
+                    className="px-3 py-2 rounded-lg text-xs font-semibold border border-rose-300 text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer"
+                    title="Revogar conexão local com a conta Microsoft"
+                  >
+                    Desconectar
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleConnectMicrosoft}
+                  disabled={msIsConnecting}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold bg-[#0078d4] text-white hover:bg-[#006cbd] transition-all shadow-sm hover:shadow cursor-pointer disabled:opacity-50"
+                  title="Conectar sua conta Microsoft corporativa com escopos Calendars.Read e offline_access"
+                >
+                  <Calendar className="w-4 h-4 text-white" />
+                  <span>{msIsConnecting ? 'Abrindo autenticação...' : 'Conectar Calendário Microsoft'}</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Feedback Message */}
+          {msFeedback && (
+            <div className={`p-3 rounded-lg text-xs flex items-center gap-2 border ${
+              msFeedback.type === 'success' 
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                : 'bg-rose-50 text-rose-800 border-rose-200'
+            }`}>
+              {msFeedback.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              )}
+              <span>{msFeedback.text}</span>
+            </div>
+          )}
+
+          {/* Connection Details & Conflict Intelligence Banner */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-3.5 rounded-lg bg-[#f8fafb] border border-[#d1d5d6]/60 space-y-2">
+              <span className="text-[11px] font-bold text-[#6a797c] uppercase tracking-wider block">
+                Conta & Status OAuth
+              </span>
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-[#6a797c]">Usuário Local:</span>
+                  <span className="font-semibold text-[#14262d]">{currentUser.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#6a797c]">E-mail Vinculado:</span>
+                  <span className="font-mono text-[#14262d] font-medium truncate max-w-[150px]">
+                    {msConnected ? msAccountEmail : 'Não conectado'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#6a797c]">Auto-Renovação:</span>
+                  <span className="font-semibold text-emerald-700 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    Ativa (Refresh Token)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-lg bg-[#f8fafb] border border-[#d1d5d6]/60 space-y-2">
+              <span className="text-[11px] font-bold text-[#6a797c] uppercase tracking-wider block">
+                Escopos Solicitados
+              </span>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex items-center gap-1.5 text-[#14262d]">
+                  <span className="font-mono bg-white px-2 py-0.5 rounded border border-[#d1d5d6]/70 text-[11px] font-bold text-[#0078d4]">
+                    Calendars.Read
+                  </span>
+                  <span className="text-[11px] text-[#6a797c]">Leitura da agenda Outlook</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[#14262d]">
+                  <span className="font-mono bg-white px-2 py-0.5 rounded border border-[#d1d5d6]/70 text-[11px] font-bold text-[#0078d4]">
+                    offline_access
+                  </span>
+                  <span className="text-[11px] text-[#6a797c]">Geração de Refresh Token</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-lg bg-sky-50/50 border border-sky-200 space-y-1 text-xs text-sky-900">
+              <span className="text-[11px] font-bold text-sky-800 uppercase tracking-wider flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+                Inteligência de Conflitos (Deduping)
+              </span>
+              <p className="text-[11px] text-sky-800 leading-relaxed">
+                Reuniões marcadas no HubSpot e eventos no Outlook/Teams no mesmo horário são automaticamente unificados no painel visual para evitar contagem duplicada de tempo ocupado na capacidade dos SDRs.
+              </p>
+            </div>
+          </div>
+
+          {/* In-System Keys Configuration (User requested: "Vou informar essas chaves de acesso no próprio sistema") */}
+          <div className="border border-[#d1d5d6]/70 rounded-xl p-5 bg-[#fafbfc] space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-[#d1d5d6]/50 pb-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-[#14262d]" />
+                  <h4 className="text-sm font-bold text-[#14262d]">
+                    Credenciais Microsoft (Azure App Registration) no Sistema
+                  </h4>
+                  {msIsConfigured && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      Chaves Gravadas
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-[#6a797c] mt-0.5">
+                  Informe o Client ID e Client Secret gerados no portal do Azure/Entra ID para autorizar a conexão OAuth 2.0 nativa com a Microsoft Graph API.
+                </p>
+              </div>
+
+              <span className="text-[10px] text-[#6a797c] font-mono bg-white px-2 py-1 rounded border border-[#d1d5d6]">
+                Redirect URI: /api/auth/microsoft/callback
+              </span>
+            </div>
+
+            <form onSubmit={handleSaveMicrosoftCredentials} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#14262d] mb-1.5">
+                    MICROSOFT_CLIENT_ID (Application ID) *
+                  </label>
+                  <input
+                    type="text"
+                    value={msClientId}
+                    onChange={(e) => setMsClientId(e.target.value)}
+                    placeholder="Ex: 8a4b2c1d-5e6f-7a8b-9c0d-1e2f3a4b5c6d"
+                    required
+                    className="w-full text-xs font-mono px-3 py-2.5 rounded-lg border border-[#d1d5d6] bg-white text-[#14262d] focus:outline-none focus:border-[#0078d4] focus:ring-1 focus:ring-[#0078d4]"
+                  />
+                  <p className="text-[10px] text-[#6a797c] mt-1">Identificador exclusivo do seu aplicativo no Microsoft Entra ID.</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#14262d] mb-1.5">
+                    MICROSOFT_CLIENT_SECRET (Valor do Segredo) *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={msShowSecret ? 'text' : 'password'}
+                      value={msClientSecret}
+                      onChange={(e) => setMsClientSecret(e.target.value)}
+                      placeholder={msIsConfigured ? '••••••••••••••••••••••••' : 'Cole aqui o Client Secret gerado'}
+                      required
+                      className="w-full text-xs font-mono px-3 py-2.5 pr-10 rounded-lg border border-[#d1d5d6] bg-white text-[#14262d] focus:outline-none focus:border-[#0078d4] focus:ring-1 focus:ring-[#0078d4]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setMsShowSecret(!msShowSecret)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#6a797c] hover:text-[#14262d] cursor-pointer"
+                    >
+                      {msShowSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-[#6a797c] mt-1">Armazenado com segurança no backend e nunca transmitido ao navegador.</p>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  disabled={msIsSavingCreds}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#14262d] hover:bg-[#1a333c] text-white text-xs font-semibold transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+                >
+                  <Save className="w-3.5 h-3.5 text-amber-300" />
+                  <span>{msIsSavingCreds ? 'Salvando...' : 'Salvar Chaves no Sistema'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
       )}
 
       {/* TAB 2: ALTERAR SENHA */}

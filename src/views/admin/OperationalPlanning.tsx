@@ -4,7 +4,7 @@ import {
   Check, Phone, Users, AlertTriangle, Sparkles, CheckCircle2, 
   Flame, Linkedin, Calendar, Bot, Plus, Trash2, RotateCcw, 
   Edit3, Briefcase, UserCheck, Settings2, Eye, Sliders, 
-  ArrowRight, Copy, CheckSquare, Layers
+  ArrowRight, Copy, CheckSquare, Layers, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { store } from '../../services/store';
 import { User, SdrScope, PlanningBlockType } from '../../types';
@@ -12,6 +12,19 @@ import {
   RoutineBlockBlueprint, getWeekdayInfo, getIdealDayBlueprints, 
   timeToMinutes, minutesToTime 
 } from '../../services/calculationEngine';
+
+const stepDate = (currentDateStr: string, deltaDays: number): string => {
+  try {
+    const [y, m, d] = currentDateStr.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d + deltaDays, 12, 0, 0);
+    const nextY = dateObj.getFullYear();
+    const nextM = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const nextD = String(dateObj.getDate()).padStart(2, '0');
+    return `${nextY}-${nextM}-${nextD}`;
+  } catch {
+    return currentDateStr;
+  }
+};
 
 const WEEKDAYS = [
   { date: '2026-10-19', dayName: 'SEGUNDA' as const, name: 'Segunda-feira', short: 'Seg', rule: 'Sem Daily · Reunião de Equipe 10h' },
@@ -21,7 +34,15 @@ const WEEKDAYS = [
   { date: '2026-10-23', dayName: 'SEXTA' as const, name: 'Sexta-feira', short: 'Sex', rule: 'Daily 09h30 · 1:1 Quinzenal 10h' },
 ];
 
-export const OperationalPlanning: React.FC = () => {
+export interface OperationalPlanningProps {
+  selectedDate?: string;
+  onSelectDate?: (date: string) => void;
+}
+
+export const OperationalPlanning: React.FC<OperationalPlanningProps> = ({
+  selectedDate: propSelectedDate,
+  onSelectDate,
+}) => {
   // Main Navigation Tabs (Current Routine vs Create/Edit Routine)
   const [activeMainTab, setActiveMainTab] = useState<'CURRENT' | 'EDITOR'>('CURRENT');
 
@@ -43,7 +64,22 @@ export const OperationalPlanning: React.FC = () => {
   const [targetType, setTargetType] = useState<'PROFESSIONAL' | 'SCOPE'>('PROFESSIONAL');
   const [selectedSdrId, setSelectedSdrId] = useState<string>(sdrUsers[0]?.id || 'user-sdr-inbound');
   const [selectedScope, setSelectedScope] = useState<SdrScope>('Inbound Qualificação');
-  const [selectedDayDate, setSelectedDayDate] = useState<string>('2026-10-21'); // Default Wednesday
+  const [selectedDayDate, setSelectedDayDate] = useState<string>(
+    propSelectedDate || store.getSelectedDate() || '2026-10-21'
+  );
+
+  // Sync when prop selectedDate changes (e.g. from header date picker)
+  useEffect(() => {
+    if (propSelectedDate && propSelectedDate !== selectedDayDate) {
+      setSelectedDayDate(propSelectedDate);
+    }
+  }, [propSelectedDate]);
+
+  const handleSelectDayDate = (newDate: string) => {
+    setSelectedDayDate(newDate);
+    store.setSelectedDate(newDate);
+    if (onSelectDate) onSelectDate(newDate);
+  };
 
   // Weekly editor active tab (which day is being inspected/edited inside weekly mode)
   const [weeklyActiveDay, setWeeklyActiveDay] = useState<string>('Segunda-feira');
@@ -349,10 +385,10 @@ export const OperationalPlanning: React.FC = () => {
       {/* ======================================================== */}
       {/* 2 MAIN VIEWS / TABS: VIGENTE vs CRIAR/EDITAR ROTINA      */}
       {/* ======================================================== */}
-      <div className="flex border-b border-[#d1d5d6] gap-3">
+      <div className="flex flex-wrap border-b border-[#d1d5d6] gap-2 sm:gap-3">
         <button
           onClick={() => setActiveMainTab('CURRENT')}
-          className={`flex items-center gap-2 px-5 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-3.5 sm:px-5 py-2.5 sm:py-3 text-xs font-bold border-b-2 transition-all cursor-pointer ${
             activeMainTab === 'CURRENT'
               ? 'border-[#14262d] text-[#14262d] bg-white rounded-t-lg shadow-2xs'
               : 'border-transparent text-[#6a797c] hover:text-[#14262d]'
@@ -360,14 +396,14 @@ export const OperationalPlanning: React.FC = () => {
         >
           <Eye className={`w-4 h-4 ${activeMainTab === 'CURRENT' ? 'text-amber-500' : ''}`} />
           <span>Aba 1: Rotina Vigente & Atual</span>
-          <span className="text-[10px] bg-slate-100 text-[#6a797c] px-2 py-0.5 rounded-full font-mono font-normal">
+          <span className="text-[10px] bg-slate-100 text-[#6a797c] px-2 py-0.5 rounded-full font-mono font-normal hidden sm:inline">
             Visualização
           </span>
         </button>
 
         <button
           onClick={() => setActiveMainTab('EDITOR')}
-          className={`flex items-center gap-2 px-5 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+          className={`flex items-center gap-2 px-3.5 sm:px-5 py-2.5 sm:py-3 text-xs font-bold border-b-2 transition-all cursor-pointer ${
             activeMainTab === 'EDITOR'
               ? 'border-[#14262d] text-[#14262d] bg-white rounded-t-lg shadow-2xs'
               : 'border-transparent text-[#6a797c] hover:text-[#14262d]'
@@ -375,7 +411,7 @@ export const OperationalPlanning: React.FC = () => {
         >
           <Sliders className={`w-4 h-4 ${activeMainTab === 'EDITOR' ? 'text-amber-500' : ''}`} />
           <span>Aba 2: Criar / Editar Rotina</span>
-          <span className="text-[10px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full font-semibold">
+          <span className="text-[10px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full font-semibold hidden sm:inline">
             Diário / Semanal
           </span>
         </button>
@@ -480,18 +516,79 @@ export const OperationalPlanning: React.FC = () => {
               </button>
             </div>
 
-            {/* Day buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 pt-1">
+            {/* Day Selector with Interactive Date Picker */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 bg-[#f8fafb] rounded-xl border border-[#d1d5d6]/70">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold text-[#14262d] flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-[#0078d4]" />
+                  <span>Data da Rotina:</span>
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => handleSelectDayDate('2026-10-21')}
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                    selectedDayDate === '2026-10-21'
+                      ? 'bg-[#14262d] text-white shadow-2xs'
+                      : 'bg-white text-[#6a797c] hover:text-[#14262d] border border-[#d1d5d6]'
+                  }`}
+                  title="Ir para a rotina de hoje (21/10/2026)"
+                >
+                  Hoje
+                </button>
+
+                <div className="flex items-center bg-white rounded-md border border-[#d1d5d6] px-1.5 py-0.5 shadow-2xs hover:border-[#0078d4] focus-within:border-[#0078d4]">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectDayDate(stepDate(selectedDayDate, -1))}
+                    title="Dia anterior"
+                    className="p-0.5 text-[#6a797c] hover:text-[#14262d] hover:bg-slate-100 rounded cursor-pointer"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <input
+                    type="date"
+                    value={selectedDayDate}
+                    onChange={(e) => e.target.value && handleSelectDayDate(e.target.value)}
+                    className="bg-transparent text-xs font-semibold text-[#14262d] px-1.5 focus:outline-none cursor-pointer"
+                    title="Selecione a data para visualizar a rotina"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSelectDayDate(stepDate(selectedDayDate, 1))}
+                    title="Próximo dia"
+                    className="p-0.5 text-[#6a797c] hover:text-[#14262d] hover:bg-slate-100 rounded cursor-pointer"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-[#6a797c]">Grade Vigente:</span>
+                <span className="font-bold text-[#14262d] bg-white px-2.5 py-1 rounded-md border border-[#d1d5d6] shadow-2xs">
+                  {weekdayInfo.formattedDate} ({weekdayInfo.label})
+                </span>
+                {weekdayInfo.isWeekend && (
+                  <span className="text-[10px] bg-rose-50 text-rose-700 px-2 py-0.5 rounded font-bold border border-rose-200">
+                    Fim de Semana
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Weekday Buttons */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 pt-1">
               {WEEKDAYS.map((wd) => {
                 const isSelected = selectedDayDate === wd.date;
                 return (
                   <button
                     key={wd.date}
-                    onClick={() => setSelectedDayDate(wd.date)}
+                    onClick={() => handleSelectDayDate(wd.date)}
                     className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-[#14262d] bg-[#14262d] text-white shadow-xs'
-                        : 'border-[#d1d5d6] bg-[#f8fafb] text-[#14262d] hover:bg-slate-100'
+                        ? 'border-[#14262d] bg-[#14262d] text-white shadow-xs ring-1 ring-[#14262d]'
+                        : 'border-[#d1d5d6] bg-[#f8fafb] text-[#14262d] hover:bg-slate-100 hover:border-slate-300'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -511,35 +608,72 @@ export const OperationalPlanning: React.FC = () => {
                 );
               })}
             </div>
+
+            {/* Custom Date Alert if selected date is outside standard week */}
+            {!WEEKDAYS.some(wd => wd.date === selectedDayDate) && (
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-300 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-amber-950">
+                  <Calendar className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>
+                    Data fora da semana padrão selecionada: <strong>{weekdayInfo.formattedDate} ({weekdayInfo.label})</strong>. O motor calculou automaticamente a grade ideal para este dia da semana.
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleSelectDayDate('2026-10-21')}
+                  className="px-2.5 py-1 rounded bg-amber-200 hover:bg-amber-300 text-amber-900 font-bold text-[11px] shrink-0 cursor-pointer self-start sm:self-auto"
+                >
+                  Voltar para Hoje
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Quick Metrics Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
-              <span className="text-[11px] font-semibold text-[#6a797c] uppercase">Expediente Oficial</span>
-              <p className="text-lg font-bold text-[#14262d] mt-1 font-mono">09h00 – 19h00</p>
-              <span className="text-[10px] text-[#6a797c]">10 horas totais diárias</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs hover:border-[#14262d] transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-[#6a797c] uppercase tracking-wider">Expediente Oficial</span>
+                <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-[#14262d]">
+                  <Clock className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <p className="text-xl font-bold text-[#14262d] mt-2 font-mono">09h00 – 19h00</p>
+              <span className="text-[11px] text-[#6a797c]">10 horas brutas diárias</span>
             </div>
 
-            <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
-              <span className="text-[11px] font-semibold text-[#6a797c] uppercase">Reuniões & Almoço</span>
-              <p className="text-lg font-bold text-amber-700 mt-1 font-mono">{currentStats.fixedMins} min</p>
-              <span className="text-[10px] text-[#6a797c]">Compromissos bloqueados</span>
+            <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs hover:border-[#14262d] transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-[#6a797c] uppercase tracking-wider">Reuniões & Almoço</span>
+                <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+                  <Users className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <p className="text-xl font-bold text-amber-700 mt-2 font-mono">{currentStats.fixedMins} min</p>
+              <span className="text-[11px] text-[#6a797c]">Compromissos fixos bloqueados</span>
             </div>
 
-            <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
-              <span className="text-[11px] font-semibold text-[#6a797c] uppercase">Tempo Comercial Útil</span>
-              <p className="text-lg font-bold text-emerald-700 mt-1 font-mono">{currentStats.commercialMins} min ({currentStats.commercialPct}%)</p>
-              <span className="text-[10px] text-emerald-600 font-semibold">Prospecção & Touch Points</span>
+            <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs hover:border-[#14262d] transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-[#6a797c] uppercase tracking-wider">Tempo Comercial Útil</span>
+                <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                  <Sparkles className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <p className="text-xl font-bold text-emerald-700 mt-2 font-mono">{currentStats.commercialMins} min ({currentStats.commercialPct}%)</p>
+              <span className="text-[11px] text-emerald-600 font-semibold">Prospecção & Touch Points</span>
             </div>
 
-            <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
-              <span className="text-[11px] font-semibold text-[#6a797c] uppercase">Touch Points c/ Ligação</span>
-              <p className="text-lg font-bold text-[#14262d] mt-1 font-mono flex items-center gap-1.5">
-                <Phone className="w-4 h-4 text-amber-500" />
+            <div className="bg-white p-4 rounded-xl border border-amber-300 shadow-xs bg-gradient-to-br from-white to-amber-50/20 hover:border-amber-400 transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Touch Points Obrigatórios</span>
+                <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
+                  <Phone className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <p className="text-xl font-bold text-[#14262d] mt-2 font-mono flex items-center gap-1.5">
                 <span>{currentStats.mandatoryCallBlocks} blocos</span>
               </p>
-              <span className="text-[10px] text-amber-800 font-semibold">Ligação Telefônica Obrigatória</span>
+              <span className="text-[11px] text-amber-800 font-semibold">📞 Ligação Telefônica Obrigatória</span>
             </div>
           </div>
 
@@ -840,19 +974,60 @@ export const OperationalPlanning: React.FC = () => {
               {/* Day Selector */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#d1d5d6]/50">
                 <div>
-                  <label className="block text-xs font-bold text-[#14262d] mb-1">
-                    Selecione o Dia da Semana para Editar:
-                  </label>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <label className="text-xs font-bold text-[#14262d]">
+                      Selecione o Dia para Calibrar a Rotina:
+                    </label>
+
+                    <div className="flex items-center bg-[#f8fafb] rounded-md border border-[#d1d5d6] px-1.5 py-0.5 shadow-2xs hover:border-[#0078d4] focus-within:border-[#0078d4]">
+                      <button
+                        type="button"
+                        onClick={() => handleSelectDayDate(stepDate(selectedDayDate, -1))}
+                        title="Dia anterior"
+                        className="p-0.5 text-[#6a797c] hover:text-[#14262d] hover:bg-slate-100 rounded cursor-pointer"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+                      <input
+                        type="date"
+                        value={selectedDayDate}
+                        onChange={(e) => e.target.value && handleSelectDayDate(e.target.value)}
+                        className="bg-transparent text-xs font-semibold text-[#14262d] px-1.5 focus:outline-none cursor-pointer"
+                        title="Escolha a data específica para editar a rotina"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleSelectDayDate(stepDate(selectedDayDate, 1))}
+                        title="Próximo dia"
+                        className="p-0.5 text-[#6a797c] hover:text-[#14262d] hover:bg-slate-100 rounded cursor-pointer"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSelectDayDate('2026-10-21')}
+                      className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+                        selectedDayDate === '2026-10-21'
+                          ? 'bg-[#14262d] text-white'
+                          : 'bg-slate-100 text-[#6a797c] hover:text-[#14262d]'
+                      }`}
+                    >
+                      Hoje
+                    </button>
+                  </div>
+
                   <div className="flex flex-wrap gap-2">
                     {WEEKDAYS.map((wd) => {
                       const isSelected = selectedDayDate === wd.date;
                       return (
                         <button
                           key={wd.date}
-                          onClick={() => setSelectedDayDate(wd.date)}
+                          onClick={() => handleSelectDayDate(wd.date)}
                           className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
                             isSelected
-                              ? 'bg-[#14262d] text-white border-[#14262d] shadow-xs'
+                              ? 'bg-[#14262d] text-white border-[#14262d] shadow-xs ring-1 ring-[#14262d]'
                               : 'bg-white text-[#6a797c] border-[#d1d5d6] hover:bg-slate-100'
                           }`}
                         >

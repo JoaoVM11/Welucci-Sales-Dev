@@ -61,6 +61,7 @@ class StoreService {
   private deletedUserIds: string[] = [];
   private currentUserId: string = 'user-admin';
   private isDemoMode: boolean = true;
+  private selectedDate: string = '2026-10-21';
   private listeners: Array<() => void> = [];
   
   // Cloud Database status
@@ -519,6 +520,18 @@ class StoreService {
   public setCurrentUser(userId: string) {
     this.currentUserId = userId;
     this.persist();
+  }
+
+  // --- Selected Routine Date Management ---
+  public getSelectedDate(): string {
+    return this.selectedDate;
+  }
+
+  public setSelectedDate(date: string): void {
+    if (this.selectedDate !== date) {
+      this.selectedDate = date;
+      this.notify();
+    }
   }
 
   public getAllUsers(): User[] {

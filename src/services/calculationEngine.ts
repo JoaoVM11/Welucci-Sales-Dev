@@ -108,12 +108,18 @@ export type WeekdayInfo = {
   dayName: 'SEGUNDA' | 'TERCA' | 'QUARTA' | 'QUINTA' | 'SEXTA' | 'FIM_DE_SEMANA';
   label: string;
   isBiweeklyFriday: boolean;
+  formattedDate: string;
+  isWeekend: boolean;
 };
 
 export function getWeekdayInfo(dateStr: string = '2026-10-21'): WeekdayInfo {
-  const d = new Date(dateStr + 'T12:00:00');
+  const [y, m, day] = dateStr.split('-').map(Number);
+  const d = new Date(y, (m || 1) - 1, day || 1, 12, 0, 0);
   const dayNumber = d.getDay();
+  const isWeekend = dayNumber === 0 || dayNumber === 6;
   
+  const formattedDate = `${String(day || 1).padStart(2, '0')}/${String(m || 1).padStart(2, '0')}/${y || 2026}`;
+
   // Calculate biweekly week number
   const startOfYear = new Date(d.getFullYear(), 0, 1);
   const weekNumber = Math.ceil((((d.getTime() - startOfYear.getTime()) / 86400000) + startOfYear.getDay() + 1) / 7);
@@ -148,7 +154,7 @@ export function getWeekdayInfo(dateStr: string = '2026-10-21'): WeekdayInfo {
       label = dayNumber === 0 ? 'Domingo' : 'Sábado';
   }
 
-  return { dayNumber, dayName, label, isBiweeklyFriday };
+  return { dayNumber, dayName, label, isBiweeklyFriday, formattedDate, isWeekend };
 }
 
 /**

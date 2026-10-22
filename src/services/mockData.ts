@@ -490,21 +490,7 @@ export const INITIAL_INTEGRATIONS: IntegrationStatus[] = [
     apiKeyOrSecretSet: true,
     details: {
       accountEmail: 'joao.batista@welucci.com',
-      endpointsChecked: ['/v1.0/me/calendar/events', '/v1.0/me/presence'],
-    },
-  },
-  {
-    provider: 'MICROSOFT_TEAMS',
-    name: 'Microsoft Teams Webhook & Calendário',
-    status: 'CONNECTED',
-    isDemoMode: false,
-    lastSuccessAt: '2026-10-21T07:18:00Z',
-    lastError: null,
-    recordsImported: 8,
-    apiKeyOrSecretSet: true,
-    details: {
-      accountEmail: 'joao.batista@welucci.com',
-      endpointsChecked: ['/webhook/incoming', '/teams/channels/sdr-operacao'],
+      endpointsChecked: ['/v1.0/me/calendarview', '/v1.0/me/presence'],
     },
   },
 ];
@@ -514,7 +500,7 @@ export const INITIAL_ALERTS: OperationalAlert[] = [
     id: 'alt-auto-adjust',
     severity: 'INFO',
     title: '✨ Rotina Diária Auto-Ajustada com Sucesso',
-    reason: 'Compromisso sincronizado via Microsoft Teams ("Treinamento Comercial") às 16h00.',
+    reason: 'Compromisso sincronizado via Microsoft 365 Outlook/Teams ("Treinamento Comercial") às 16h00.',
     estimatedImpact: 'O motor de rotina reorganizou a cadência de touch points e follow-up de no-shows nos intervalos livres.',
     recommendedAction: 'A rotina da equipe já está sincronizada e respeita os horários de daily e almoço.',
     timestamp: '2026-10-21T07:18:00Z',

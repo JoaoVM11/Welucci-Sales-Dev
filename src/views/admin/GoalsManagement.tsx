@@ -117,16 +117,16 @@ export const GoalsManagement: React.FC = () => {
   const previewKpi = previewDraft ? store.getSdrKpiSummary(previewDraft.sdrId) : null;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
       {/* View Header */}
-      <div className="bg-white p-6 rounded-xl border border-[#d1d5d6]/70 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white p-5 sm:p-6 rounded-xl border border-[#d1d5d6]/70 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="p-2 rounded-lg bg-[#14262d] text-[#d1d5d6]">
-              <Target className="w-5 h-5" />
+          <div className="flex items-center gap-2.5">
+            <span className="p-2 sm:p-2.5 rounded-lg bg-[#14262d] text-[#d1d5d6] shrink-0">
+              <Target className="w-5 h-5 text-amber-300" />
             </span>
             <div>
-              <h2 className="text-xl font-bold text-[#14262d] tracking-tight">
+              <h2 className="text-lg sm:text-xl font-bold text-[#14262d] tracking-tight">
                 Gestão de Metas e Escopos da Equipe
               </h2>
               <p className="text-xs text-[#6a797c] mt-0.5">
@@ -136,20 +136,20 @@ export const GoalsManagement: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button
             onClick={loadData}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium border border-[#d1d5d6] text-[#6a797c] hover:bg-[#f8fafb] transition-colors"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium border border-[#d1d5d6] text-[#6a797c] hover:bg-[#f8fafb] transition-colors cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Descartar Alterações</span>
+            <span>Descartar</span>
           </button>
 
           <button
             onClick={handleSaveAll}
-            className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold bg-[#14262d] text-white hover:bg-[#1c3640] shadow-sm transition-all"
+            className="flex items-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-xs font-semibold bg-[#14262d] text-white hover:bg-[#1c3640] shadow-sm transition-all cursor-pointer"
           >
-            <Save className="w-4 h-4 text-[#d1d5d6]" />
+            <Save className="w-4 h-4 text-amber-300" />
             <span>Salvar Metas e Escopos</span>
           </button>
         </div>
@@ -164,12 +164,12 @@ export const GoalsManagement: React.FC = () => {
               Metas e escopos atualizados com sucesso no sistema e sincronizados com os painéis dos SDRs!
             </span>
           </div>
-          <span className="text-[11px] text-emerald-600">Registro de auditoria gravado</span>
+          <span className="text-[11px] text-emerald-600 hidden sm:inline">Registro de auditoria gravado</span>
         </div>
       )}
 
       {/* Coherence KPI Ribbon */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
           <p className="text-[11px] font-semibold text-[#6a797c] uppercase tracking-wider">Meta Diária da Equipe</p>
           <div className="flex items-baseline gap-2 mt-1">
@@ -347,13 +347,18 @@ export const GoalsManagement: React.FC = () => {
               2. Metas Individuais e Escopos de Atuação por SDR/BDR
             </h3>
           </div>
-          <span className="text-xs text-[#6a797c]">
+          <span className="text-xs text-[#6a797c] hidden sm:inline">
             Cada SDR/BDR visualiza exclusivamente suas próprias metas e escopos atribuídos
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        {/* Mobile Swipe Notice */}
+        <div className="block sm:hidden text-[10px] font-semibold text-[#6a797c] text-right">
+          (Deslize para ver colunas ➔)
+        </div>
+
+        <div className="-mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto">
+          <table className="w-full text-left text-xs min-w-[700px]">
             <thead>
               <tr className="border-b border-[#d1d5d6] bg-[#f8fafb] text-[#14262d] font-semibold">
                 <th className="py-3 px-3">SDR / BDR</th>
@@ -484,7 +489,7 @@ export const GoalsManagement: React.FC = () => {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-[#0e1d23] p-4 rounded-lg border border-[#1e343c]">
               <span className="text-[11px] text-[#d1d5d6]/80 font-medium uppercase">Meta Diária (D0)</span>
               <p className="text-2xl font-bold font-mono text-white mt-1">{previewDraft.daily}</p>

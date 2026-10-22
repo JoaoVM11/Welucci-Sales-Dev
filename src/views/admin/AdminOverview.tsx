@@ -88,27 +88,31 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
       </div>
 
       {/* 6.1 Cards de Indicadores Consolidados */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
         {/* SDRs Ativos */}
-        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs relative group">
+        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs relative group hover:border-[#14262d] transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase text-[#6a797c] tracking-wider">SDRs Ativos</span>
-            <Users className="w-4 h-4 text-[#6a797c]" />
+            <span className="text-[11px] font-bold uppercase text-[#6a797c] tracking-wider">SDRs Ativos</span>
+            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-[#14262d]">
+              <Users className="w-4 h-4" />
+            </div>
           </div>
           <div className="text-2xl font-bold font-mono text-[#14262d] mt-2">
             {teamKpi.activeSdrsCount}
           </div>
-          <p className="text-[11px] text-[#6a797c] mt-1">Equipe 100% alocada</p>
-          <div className="hidden group-hover:block absolute z-20 left-2 bottom-full mb-1 w-48 bg-[#14262d] text-white text-[11px] p-2 rounded shadow-lg">
-            Total de SDRs com metas ativas no mês.
+          <div className="flex items-center gap-1.5 text-[11px] text-[#6a797c] mt-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span>Equipe 100% alocada</span>
           </div>
         </div>
 
         {/* Tarefas Pendentes */}
-        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs relative group">
+        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs relative group hover:border-[#14262d] transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase text-[#6a797c] tracking-wider">Tarefas Pendentes</span>
-            <Clock className="w-4 h-4 text-[#6a797c]" />
+            <span className="text-[11px] font-bold uppercase text-[#6a797c] tracking-wider">Tarefas Pendentes</span>
+            <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-700 flex items-center justify-center">
+              <Clock className="w-4 h-4" />
+            </div>
           </div>
           <div className="text-2xl font-bold font-mono text-[#14262d] mt-2">
             {teamKpi.totalPendingTasks}
@@ -116,80 +120,85 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
           <p className="text-[11px] text-[#6a797c] mt-1">
             <strong className="text-amber-600 font-mono">{teamKpi.totalOverdueTasks}</strong> atrasadas · {teamKpi.totalTodayTasks} hoje
           </p>
-          <div className="hidden group-hover:block absolute z-20 left-2 bottom-full mb-1 w-52 bg-[#14262d] text-white text-[11px] p-2 rounded shadow-lg">
-            Volume de tarefas abertas que exigem execução comercial no CRM.
-          </div>
         </div>
 
         {/* Carga vs Capacidade */}
-        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs relative group">
+        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs relative group hover:border-[#14262d] transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase text-[#6a797c] tracking-wider">Utilização Carga</span>
-            <Clock className="w-4 h-4 text-[#6a797c]" />
+            <span className="text-[11px] font-bold uppercase text-[#6a797c] tracking-wider">Ocupação Carga</span>
+            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+              <Clock className="w-4 h-4" />
+            </div>
           </div>
           <div className="text-2xl font-bold font-mono text-[#14262d] mt-2">
             {teamKpi.averageCapacityUtilization}%
           </div>
-          <p className="text-[11px] text-[#6a797c] mt-1">
+          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1.5">
+            <div 
+              className={`h-full ${teamKpi.averageCapacityUtilization > 85 ? 'bg-amber-500' : 'bg-emerald-500'}`} 
+              style={{ width: `${Math.min(100, teamKpi.averageCapacityUtilization)}%` }} 
+            />
+          </div>
+          <p className="text-[10px] text-[#6a797c] mt-1 font-mono">
             {teamKpi.totalWorkloadMinutes}m carga / {teamKpi.totalCapacityMinutes}m livres
           </p>
-          <div className="hidden group-hover:block absolute z-20 left-2 bottom-full mb-1 w-56 bg-[#14262d] text-white text-[11px] p-2 rounded shadow-lg">
-            Fórmula: Carga estimada ÷ Capacidade produtiva líquida da equipe × 100.
-          </div>
         </div>
 
         {/* Reuniões Agendadas vs Realizadas */}
-        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs relative group">
+        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs relative group hover:border-[#14262d] transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase text-[#6a797c] tracking-wider">Reuniões Período</span>
-            <CalendarCheck2 className="w-4 h-4 text-[#6a797c]" />
+            <span className="text-[11px] font-bold uppercase text-[#6a797c] tracking-wider">Reuniões</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+              <CalendarCheck2 className="w-4 h-4" />
+            </div>
           </div>
           <div className="text-2xl font-bold font-mono text-[#14262d] mt-2">
-            {teamKpi.totalScheduledMeetings} <span className="text-sm font-normal text-[#6a797c]">agendadas</span>
+            {teamKpi.totalScheduledMeetings}
           </div>
-          <p className="text-[11px] text-emerald-600 font-medium mt-1">
-            {teamKpi.totalHeldMeetings} realizadas ({teamKpi.totalAttendanceRatePercent}% comp.)
+          <p className="text-[11px] text-emerald-600 font-semibold mt-1">
+            {teamKpi.totalHeldMeetings} realizadas ({teamKpi.totalAttendanceRatePercent}%)
           </p>
-          <div className="hidden group-hover:block absolute z-20 left-2 bottom-full mb-1 w-60 bg-[#14262d] text-white text-[11px] p-2 rounded shadow-lg">
-            Reuniões agendadas no período versus reuniões já realizadas e taxa de comparecimento.
-          </div>
         </div>
 
         {/* GAP D0 da Equipe */}
-        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs relative group">
+        <div className="bg-white p-4 rounded-xl border border-amber-300 shadow-xs relative group bg-gradient-to-br from-white to-amber-50/30">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase text-[#6a797c] tracking-wider">GAP D0 Equipe</span>
-            <Target className="w-4 h-4 text-amber-500" />
+            <span className="text-[11px] font-bold uppercase text-amber-800 tracking-wider">GAP D0 Equipe</span>
+            <div className="w-8 h-8 rounded-lg bg-amber-400/20 text-amber-800 flex items-center justify-center">
+              <Target className="w-4 h-4" />
+            </div>
           </div>
           <div className="text-2xl font-bold font-mono text-amber-600 mt-2">
             {teamKpi.teamGapD0}
           </div>
           <p className="text-[11px] text-[#6a797c] mt-1">
-            Faltam para a meta diária ({teamKpi.teamBookedToday}/{teamKpi.teamDailyGoal})
+            Meta: {teamKpi.teamBookedToday}/{teamKpi.teamDailyGoal} agendamentos
           </p>
-          <div className="hidden group-hover:block absolute z-20 left-2 bottom-full mb-1 w-60 bg-[#14262d] text-white text-[11px] p-2 rounded shadow-lg">
-            Soma dos gaps individuais dos SDRs elegíveis: max(0, Meta Diária - Agendamentos D0 válidos).
-          </div>
         </div>
       </div>
 
       {/* 6.2 Quadro de Saúde Operacional da Equipe */}
-      <div className="bg-white rounded-xl border border-[#d1d5d6]/70 p-6 shadow-xs space-y-4">
+      <div className="bg-white rounded-xl border border-[#d1d5d6]/70 p-4 sm:p-6 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#d1d5d6]/50 pb-3">
           <div>
-            <h3 className="text-sm font-bold text-[#14262d] uppercase tracking-wide">
-              Quadro de Saúde Operacional da Equipe SDR
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-[#14262d] uppercase tracking-wide">
+                Quadro de Saúde Operacional da Equipe SDR
+              </h3>
+              <span className="text-[10px] text-[#6a797c] md:hidden">
+                (Deslize ➔)
+              </span>
+            </div>
             <p className="text-xs text-[#6a797c] mt-0.5">
               Acompanhamento individual de carga, pendências, agendamentos D0 e riscos de SLA.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-[#6a797c] font-medium">Ordenar por:</span>
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            <span className="text-[#6a797c] font-medium">Ordenar:</span>
             <button
               onClick={() => handleSort('overdue')}
-              className={`px-2 py-1 rounded-md border text-xs font-medium transition-colors ${
+              className={`px-2.5 py-1 rounded-md border text-xs font-semibold transition-colors cursor-pointer ${
                 sortField === 'overdue' ? 'bg-[#14262d] text-white border-[#14262d]' : 'bg-[#f8fafb] text-[#6a797c] border-[#d1d5d6]'
               }`}
             >
@@ -197,7 +206,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
             </button>
             <button
               onClick={() => handleSort('gap')}
-              className={`px-2 py-1 rounded-md border text-xs font-medium transition-colors ${
+              className={`px-2.5 py-1 rounded-md border text-xs font-semibold transition-colors cursor-pointer ${
                 sortField === 'gap' ? 'bg-[#14262d] text-white border-[#14262d]' : 'bg-[#f8fafb] text-[#6a797c] border-[#d1d5d6]'
               }`}
             >
@@ -205,7 +214,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
             </button>
             <button
               onClick={() => handleSort('capacity')}
-              className={`px-2 py-1 rounded-md border text-xs font-medium transition-colors ${
+              className={`px-2.5 py-1 rounded-md border text-xs font-semibold transition-colors cursor-pointer ${
                 sortField === 'capacity' ? 'bg-[#14262d] text-white border-[#14262d]' : 'bg-[#f8fafb] text-[#6a797c] border-[#d1d5d6]'
               }`}
             >
@@ -214,7 +223,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-[#d1d5d6] bg-[#f8fafb] text-[#14262d] font-semibold">

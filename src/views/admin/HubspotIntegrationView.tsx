@@ -277,7 +277,7 @@ export const HubspotIntegrationView: React.FC = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
       {/* View Header */}
       <div className="bg-white p-6 rounded-xl border border-[#d1d5d6]/70 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -696,12 +696,26 @@ export const HubspotIntegrationView: React.FC = () => {
 
         {/* TAB 3: sdr_calendar_blocks */}
         {activeTableTab === 'CALENDAR' && (
-          <div className="p-4 overflow-x-auto">
+          <div className="p-4 overflow-x-auto space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#d1d5d6]/40">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-[#6a797c] font-semibold">Tabela Espelho:</span>
+                <span className="text-xs font-mono font-bold text-[#14262d]">sdr_calendar_blocks</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  HubSpot CRM + Microsoft 365 Reconciliados
+                </span>
+              </div>
+              <span className="text-[11px] text-[#6a797c]">
+                Conflitos de mesmo horário unificados pelo motor de deduping
+              </span>
+            </div>
+
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="bg-[#f8fafb] border-b border-[#d1d5d6] text-[#14262d] font-bold">
+                  <th className="py-2.5 px-3 w-32">provedor</th>
                   <th className="py-2.5 px-3 w-28">id_evento</th>
-                  <th className="py-2.5 px-3">titulo / descricao</th>
+                  <th className="py-2.5 px-3">titulo / compromisso</th>
                   <th className="py-2.5 px-3 w-36">start_time</th>
                   <th className="py-2.5 px-3 w-36">end_time</th>
                   <th className="py-2.5 px-3 text-center w-24">tipo_bloco</th>
@@ -711,8 +725,24 @@ export const HubspotIntegrationView: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-[#d1d5d6]/50">
                 {sdrCalendarBlocks.map((block) => (
-                  <tr key={block.id_evento} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-2.5 px-3 font-mono text-[#6a797c]">
+                  <tr key={block.id_evento} className={`hover:bg-slate-50 transition-colors ${block.isUnifiedDeduped ? 'bg-sky-50/30' : ''}`}>
+                    <td className="py-2.5 px-3">
+                      {block.isUnifiedDeduped ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300" title="Evento consolidado sem duplicar contagem de tempo ocupado">
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          Unificado (HS + M365)
+                        </span>
+                      ) : block.provedor === 'microsoft' ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#0078d4]/10 text-[#0078d4] border border-[#0078d4]/30">
+                          Microsoft 365
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#ff7a59]/10 text-[#ff7a59] border border-[#ff7a59]/30">
+                          HubSpot CRM
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-3 font-mono text-[#6a797c] truncate max-w-[120px]" title={block.id_evento}>
                       {block.id_evento}
                     </td>
                     <td className="py-2.5 px-3 font-semibold text-[#14262d]">

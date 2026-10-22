@@ -47,7 +47,7 @@ export const SdrDetailModal: React.FC<SdrDetailModalProps> = ({
         {/* Content */}
         <div className="p-6 overflow-y-auto space-y-6 text-xs">
           {/* KPI Ribbon */}
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-[#f8fafb] p-3 rounded-lg border border-[#d1d5d6]/70">
               <span className="text-[#6a797c] font-semibold text-[10px] uppercase">Meta D0</span>
               <p className="text-xl font-bold font-mono text-[#14262d] mt-1">{kpi.dailyGoal}</p>
@@ -108,19 +108,19 @@ export const SdrDetailModal: React.FC<SdrDetailModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-[#f8fafb] border-t border-[#d1d5d6] flex items-center justify-between shrink-0">
+        <div className="p-4 bg-[#f8fafb] border-t border-[#d1d5d6] flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2.5 shrink-0">
           <button
             onClick={() => {
               onSwitchToSdr(sdr.id);
               onClose();
             }}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#14262d] text-white hover:bg-[#1c3640] transition-colors"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-lg text-xs font-semibold bg-[#14262d] text-white hover:bg-[#1c3640] transition-colors cursor-pointer text-center"
           >
             Acessar Painel como {sdr.name}
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg text-xs font-medium text-[#6a797c] hover:bg-slate-200"
+            className="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-medium text-[#6a797c] hover:bg-slate-200 transition-colors cursor-pointer text-center"
           >
             Fechar
           </button>

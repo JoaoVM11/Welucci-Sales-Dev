@@ -9,6 +9,7 @@ import { OperationalPlanning } from './views/admin/OperationalPlanning';
 import { ReportsView } from './views/admin/ReportsView';
 import { IntegrationsView } from './views/admin/IntegrationsView';
 import { HubspotIntegrationView } from './views/admin/HubspotIntegrationView';
+import { MicrosoftIntegrationView } from './views/admin/MicrosoftIntegrationView';
 import { SettingsView } from './views/admin/SettingsView';
 import { TeamManagementView } from './views/admin/TeamManagementView';
 import { GeminiCopilotDrawer } from './components/ai/GeminiCopilotDrawer';
@@ -25,17 +26,33 @@ export default function App() {
   const [, setTick] = useState<number>(0);
   const [currentView, setCurrentView] = useState<string>('admin-overview');
   const [selectedPeriod, setSelectedPeriod] = useState<string>('Hoje');
+  const [selectedDate, setSelectedDate] = useState<string>(store.getSelectedDate() || '2026-10-21');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [drilldownSdrId, setDrilldownSdrId] = useState<string | null>(null);
   const [isCopilotOpen, setIsCopilotOpen] = useState<boolean>(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
   // Subscribe to reactive store changes
   useEffect(() => {
     const unsubscribe = store.subscribe(() => {
       setTick((t) => t + 1);
+      const storeDate = store.getSelectedDate();
+      if (storeDate && storeDate !== selectedDate) {
+        setSelectedDate(storeDate);
+      }
     });
     return () => unsubscribe();
-  }, []);
+  }, [selectedDate]);
+
+  const handleSelectDate = (date: string) => {
+    setSelectedDate(date);
+    store.setSelectedDate(date);
+    if (date === '2026-10-21') {
+      setSelectedPeriod('Hoje');
+    } else {
+      setSelectedPeriod('Data Escolhida');
+    }
+  };
 
   const currentUser = store.getCurrentUser();
   const allUsers = store.getAllUsers();
@@ -74,7 +91,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#f8fafb] font-sans text-[#14262d]">
-      {/* Fixed Desktop Sidebar */}
+      {/* Sidebar (Desktop Persistent + Mobile Slide-over Drawer) */}
       <Sidebar
         currentView={currentView}
         onNavigate={setCurrentView}
@@ -84,10 +101,12 @@ export default function App() {
         isDemoMode={isDemoMode}
         onToggleDemoMode={() => store.toggleDemoMode()}
         onOpenCopilot={() => setIsCopilotOpen(true)}
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
         {/* Top Header */}
         <Header
           currentView={currentView}
@@ -98,7 +117,10 @@ export default function App() {
           isSyncing={isSyncing}
           selectedPeriod={selectedPeriod}
           onSelectPeriod={setSelectedPeriod}
+          selectedDate={selectedDate}
+          onSelectDate={handleSelectDate}
           onOpenCopilot={() => setIsCopilotOpen(true)}
+          onToggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
 
         {/* Scrollable View Canvas */}
@@ -128,15 +150,25 @@ export default function App() {
 
           {currentView === 'admin-meetings' && <MeetingsAnalysis />}
 
-          {currentView === 'admin-planning' && <OperationalPlanning />}
+          {currentView === 'admin-planning' && (
+            <OperationalPlanning 
+              selectedDate={selectedDate}
+              onSelectDate={handleSelectDate}
+            />
+          )}
 
           {currentView === 'admin-reports' && <ReportsView />}
 
           {currentView === 'admin-integrations' && (
-            <IntegrationsView onNavigateToHubspot={() => setCurrentView('admin-hubspot')} />
+            <IntegrationsView 
+              onNavigateToHubspot={() => setCurrentView('admin-hubspot')} 
+              onNavigateToMicrosoft={() => setCurrentView('admin-microsoft')}
+            />
           )}
 
           {currentView === 'admin-hubspot' && <HubspotIntegrationView />}
+
+          {currentView === 'admin-microsoft' && <MicrosoftIntegrationView />}
 
           {currentView === 'admin-settings' && <SettingsView />}
 
@@ -148,6 +180,7 @@ export default function App() {
               onNavigateToTasks={() => setCurrentView('sdr-tasks')}
               onNavigateToMeetings={() => setCurrentView('sdr-meetings')}
               onCompleteTask={handleCompleteTask}
+              selectedDate={selectedDate}
             />
           )}
 
@@ -155,6 +188,8 @@ export default function App() {
             <SdrRoutine
               currentUser={currentUser}
               onCompleteTask={handleCompleteTask}
+              selectedDate={selectedDate}
+              onSelectDate={handleSelectDate}
             />
           )}
 

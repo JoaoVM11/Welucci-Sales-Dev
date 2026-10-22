@@ -13,6 +13,7 @@ interface SdrDashboardProps {
   onNavigateToTasks: () => void;
   onNavigateToMeetings: () => void;
   onCompleteTask: (taskId: string) => void;
+  selectedDate?: string;
 }
 
 export const SdrDashboard: React.FC<SdrDashboardProps> = ({
@@ -21,15 +22,17 @@ export const SdrDashboard: React.FC<SdrDashboardProps> = ({
   onNavigateToTasks,
   onNavigateToMeetings,
   onCompleteTask,
+  selectedDate,
 }) => {
-  const kpi = store.getSdrKpiSummary(currentUser.id);
+  const activeDate = selectedDate || store.getSelectedDate() || '2026-10-21';
+  const kpi = store.getSdrKpiSummary(currentUser.id, activeDate);
   const sdrGoal = store.getSdrGoal(currentUser.id);
   const allTasks = store.getTasks({ ownerId: currentUser.id });
   const notifications = store.getNotifications(currentUser.id).filter(n => !n.read);
 
-  const overdueTasks = allTasks.filter(t => t.status !== 'COMPLETED' && t.dueAt < '2026-10-21T00:00:00');
-  const todayTasks = allTasks.filter(t => t.status !== 'COMPLETED' && t.dueAt.startsWith('2026-10-21'));
-  const futureTasks = allTasks.filter(t => t.status !== 'COMPLETED' && t.dueAt > '2026-10-21T23:59:59');
+  const overdueTasks = allTasks.filter(t => t.status !== 'COMPLETED' && t.dueAt < `${activeDate}T00:00:00`);
+  const todayTasks = allTasks.filter(t => t.status !== 'COMPLETED' && t.dueAt.startsWith(activeDate));
+  const futureTasks = allTasks.filter(t => t.status !== 'COMPLETED' && t.dueAt > `${activeDate}T23:59:59`);
 
   // Pace message calculation based on rigorous math
   const getPaceMessage = () => {
@@ -131,10 +134,15 @@ export const SdrDashboard: React.FC<SdrDashboardProps> = ({
       )}
 
       {/* 7.1 Indicadores Individuais */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
         {/* Minha Meta D0 */}
-        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
-          <span className="text-[11px] font-semibold uppercase text-[#6a797c] tracking-wider">Minha Meta D0</span>
+        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs hover:border-[#14262d] transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase text-[#6a797c] tracking-wider">Minha Meta D0</span>
+            <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-[#14262d]">
+              <Target className="w-3.5 h-3.5" />
+            </div>
+          </div>
           <div className="flex items-baseline gap-2 mt-2">
             <span className="text-2xl font-bold font-mono text-[#14262d]">{kpi.dailyGoal}</span>
             <span className="text-xs text-[#6a797c]">reuniões</span>
@@ -143,20 +151,30 @@ export const SdrDashboard: React.FC<SdrDashboardProps> = ({
         </div>
 
         {/* Agendados Hoje */}
-        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
-          <span className="text-[11px] font-semibold uppercase text-[#6a797c] tracking-wider">Agendados Hoje</span>
+        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs hover:border-[#14262d] transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase text-[#6a797c] tracking-wider">Agendados Hoje</span>
+            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+            </div>
+          </div>
           <div className="flex items-baseline gap-2 mt-2">
             <span className="text-2xl font-bold font-mono text-emerald-600">{kpi.bookedTodayCount}</span>
             <span className="text-xs text-[#6a797c]">válidos</span>
           </div>
-          <p className="text-[11px] text-emerald-600 font-medium mt-1">
-            {kpi.attainmentPercent}% atingido
+          <p className="text-[11px] text-emerald-600 font-semibold mt-1">
+            {kpi.attainmentPercent}% da meta diária
           </p>
         </div>
 
         {/* GAP D0 Faltante */}
-        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
-          <span className="text-[11px] font-semibold uppercase text-[#6a797c] tracking-wider">GAP D0 Faltante</span>
+        <div className="bg-white p-4 rounded-xl border border-amber-300 shadow-xs bg-gradient-to-br from-white to-amber-50/20 hover:border-amber-400 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase text-amber-800 tracking-wider">GAP D0 Faltante</span>
+            <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
+              <Clock className="w-3.5 h-3.5" />
+            </div>
+          </div>
           <div className="flex items-baseline gap-2 mt-2">
             <span className={`text-2xl font-bold font-mono ${kpi.gapD0 > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
               {kpi.gapD0}
@@ -164,30 +182,40 @@ export const SdrDashboard: React.FC<SdrDashboardProps> = ({
             <span className="text-xs text-[#6a797c]">reuniões</span>
           </div>
           <p className="text-[11px] text-[#6a797c] mt-1">
-            {kpi.gapD0 > 0 ? `Ritmo: ${kpi.paceRequiredPerHour}/h útil` : 'Meta batida!'}
+            {kpi.gapD0 > 0 ? `Ritmo sugerido: ${kpi.paceRequiredPerHour}/h útil` : 'Meta diária atingida!'}
           </p>
         </div>
 
         {/* Reuniões Realizadas */}
-        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
-          <span className="text-[11px] font-semibold uppercase text-[#6a797c] tracking-wider">Realizadas</span>
+        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs hover:border-[#14262d] transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase text-[#6a797c] tracking-wider">Realizadas</span>
+            <div className="w-7 h-7 rounded-lg bg-sky-50 text-sky-700 flex items-center justify-center">
+              <CalendarCheck2 className="w-3.5 h-3.5" />
+            </div>
+          </div>
           <div className="flex items-baseline gap-2 mt-2">
             <span className="text-2xl font-bold font-mono text-[#14262d]">{kpi.heldMeetingsCount}</span>
             <span className="text-xs text-[#6a797c]">reuniões</span>
           </div>
-          <p className="text-[11px] text-[#6a797c] mt-1">
+          <p className="text-[11px] text-[#6a797c] mt-1 font-semibold text-emerald-600">
             {kpi.attendanceRatePercent}% comparecimento
           </p>
         </div>
 
         {/* Carga vs Capacidade */}
-        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs">
-          <span className="text-[11px] font-semibold uppercase text-[#6a797c] tracking-wider">Carga de Hoje</span>
+        <div className="bg-white p-4 rounded-xl border border-[#d1d5d6]/70 shadow-xs hover:border-[#14262d] transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase text-[#6a797c] tracking-wider">Carga Operacional</span>
+            <div className="w-7 h-7 rounded-lg bg-slate-100 text-[#14262d] flex items-center justify-center">
+              <Clock className="w-3.5 h-3.5" />
+            </div>
+          </div>
           <div className="flex items-baseline gap-2 mt-2">
             <span className="text-2xl font-bold font-mono text-[#14262d]">{kpi.workloadMinutes}m</span>
-            <span className="text-xs text-[#6a797c]">/ {kpi.availableCapacityMinutes}m</span>
+            <span className="text-xs text-[#6a797c]">/ {kpi.availableCapacityMinutes}m livres</span>
           </div>
-          <p className={`text-[11px] font-medium mt-1 ${
+          <p className={`text-[11px] font-semibold mt-1 ${
             kpi.capacityStatus === 'SOBRECARGA' ? 'text-rose-600' : 'text-emerald-600'
           }`}>
             {kpi.capacityUtilizationPercent}% ({kpi.capacityStatus})
