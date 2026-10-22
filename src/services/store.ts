@@ -1,13 +1,18 @@
 import { 
   User, SdrProfile, Goal, Task, Meeting, CalendarEvent, 
   IntegrationStatus, OperationalAlert, AuditLog, PlanningBlock, SdrScope, AppNotification,
-  SdrMetric, SdrTaskItem, SdrCalendarBlock 
+  SdrMetric, SdrTaskItem, SdrCalendarBlock, CallRecord, LeadScheduleSpeedItem, 
+  LeadTaskCadenceRelation, AdminTelemetrySummary 
 } from '../types';
 import { 
   INITIAL_USERS, INITIAL_PROFILES, INITIAL_GOALS, 
   INITIAL_TASKS, INITIAL_MEETINGS, INITIAL_CALENDAR_EVENTS, 
   INITIAL_INTEGRATIONS, INITIAL_ALERTS, INITIAL_AUDIT_LOGS, INITIAL_NOTIFICATIONS 
 } from './mockData';
+import { 
+  INITIAL_CALL_RECORDS, INITIAL_LEAD_SPEED_ITEMS, 
+  INITIAL_LEAD_TASK_CADENCE, calculateTelemetrySummary 
+} from './telemetryData';
 import { 
   calculateAvailableCapacityMinutes, calculateWorkloadMinutes, 
   calculateCapacityUtilization, calculateGapD0, calculateAttainment, 
@@ -40,6 +45,9 @@ const STORAGE_KEYS = {
   SDR_METRICS: 'welucci_sdr_metrics',
   SDR_TASKS: 'welucci_sdr_tasks',
   SDR_CALENDAR_BLOCKS: 'welucci_sdr_calendar_blocks',
+  CALL_RECORDS: 'welucci_call_records',
+  LEAD_SPEED: 'welucci_lead_speed',
+  LEAD_CADENCE: 'welucci_lead_cadence',
 };
 
 class StoreService {
@@ -58,6 +66,9 @@ class StoreService {
   private sdrMetrics: SdrMetric[] = [];
   private sdrTasks: SdrTaskItem[] = [];
   private sdrCalendarBlocks: SdrCalendarBlock[] = [];
+  private callRecords: CallRecord[] = [];
+  private leadSpeedItems: LeadScheduleSpeedItem[] = [];
+  private leadTaskCadence: LeadTaskCadenceRelation[] = [];
   private deletedUserIds: string[] = [];
   private currentUserId: string = 'user-admin';
   private isDemoMode: boolean = true;
@@ -251,6 +262,15 @@ class StoreService {
         },
       ];
 
+      const storedCalls = localStorage.getItem(STORAGE_KEYS.CALL_RECORDS);
+      this.callRecords = storedCalls ? JSON.parse(storedCalls) : [...INITIAL_CALL_RECORDS];
+
+      const storedSpeed = localStorage.getItem(STORAGE_KEYS.LEAD_SPEED);
+      this.leadSpeedItems = storedSpeed ? JSON.parse(storedSpeed) : [...INITIAL_LEAD_SPEED_ITEMS];
+
+      const storedCadence = localStorage.getItem(STORAGE_KEYS.LEAD_CADENCE);
+      this.leadTaskCadence = storedCadence ? JSON.parse(storedCadence) : [...INITIAL_LEAD_TASK_CADENCE];
+
       // Ensure João V. Batista is strictly the active Admin
       const adminExists = this.users.find(u => u.id === 'user-admin' || u.email === 'joao.batista@welucci.com');
       if (!adminExists) {
@@ -325,6 +345,9 @@ class StoreService {
       localStorage.setItem(STORAGE_KEYS.SDR_METRICS, JSON.stringify(this.sdrMetrics));
       localStorage.setItem(STORAGE_KEYS.SDR_TASKS, JSON.stringify(this.sdrTasks));
       localStorage.setItem(STORAGE_KEYS.SDR_CALENDAR_BLOCKS, JSON.stringify(this.sdrCalendarBlocks));
+      localStorage.setItem(STORAGE_KEYS.CALL_RECORDS, JSON.stringify(this.callRecords));
+      localStorage.setItem(STORAGE_KEYS.LEAD_SPEED, JSON.stringify(this.leadSpeedItems));
+      localStorage.setItem(STORAGE_KEYS.LEAD_CADENCE, JSON.stringify(this.leadTaskCadence));
     } catch (e) {
       console.warn('Storage quota or serialization issue:', e);
     }
@@ -1695,6 +1718,74 @@ class StoreService {
     });
 
     return [headers.join(','), ...rows].join('\n');
+  }
+
+  // --- Telemetria de Chamadas & Velocidade de Leads (Admin) ---
+  public getCallRecords(filter?: { sdrId?: string; outcome?: string; status?: string }): CallRecord[] {
+    let result = [...this.callRecords];
+    if (filter?.sdrId && filter.sdrId !== 'ALL') {
+      result = result.filter(c => c.sdrId === filter.sdrId);
+    }
+    if (filter?.outcome && filter.outcome !== 'ALL') {
+      result = result.filter(c => c.outcome === filter.outcome);
+    }
+    if (filter?.status && filter.status !== 'ALL') {
+      result = result.filter(c => c.status === filter.status);
+    }
+    return result;
+  }
+
+  public addCallRecord(call: Omit<CallRecord, 'id'>): CallRecord {
+    const newCall: CallRecord = {
+      ...call,
+      id: `call-${Date.now()}`,
+    };
+    this.callRecords.unshift(newCall);
+    this.persist();
+    this.notify();
+    return newCall;
+  }
+
+  public getLeadScheduleSpeedItems(filter?: { sdrId?: string; speedCategory?: string }): LeadScheduleSpeedItem[] {
+    let result = [...this.leadSpeedItems];
+    if (filter?.sdrId && filter.sdrId !== 'ALL') {
+      result = result.filter(s => s.sdrId === filter.sdrId);
+    }
+    if (filter?.speedCategory && filter.speedCategory !== 'ALL') {
+      result = result.filter(s => s.speedCategory === filter.speedCategory);
+    }
+    return result;
+  }
+
+  public addLeadSpeedItem(item: Omit<LeadScheduleSpeedItem, 'leadId'>): LeadScheduleSpeedItem {
+    const newItem: LeadScheduleSpeedItem = {
+      ...item,
+      leadId: `lead-spd-${Date.now()}`,
+    };
+    this.leadSpeedItems.unshift(newItem);
+    this.persist();
+    this.notify();
+    return newItem;
+  }
+
+  public getLeadTaskCadenceRelations(filter?: { sdrId?: string; cadenceStage?: string }): LeadTaskCadenceRelation[] {
+    let result = [...this.leadTaskCadence];
+    if (filter?.sdrId && filter.sdrId !== 'ALL') {
+      result = result.filter(c => c.sdrId === filter.sdrId);
+    }
+    if (filter?.cadenceStage && filter.cadenceStage !== 'ALL') {
+      result = result.filter(c => c.cadenceStage === filter.cadenceStage);
+    }
+    return result;
+  }
+
+  public getAdminTelemetrySummary(sdrIdFilter?: string): AdminTelemetrySummary {
+    return calculateTelemetrySummary(
+      this.callRecords,
+      this.leadSpeedItems,
+      this.leadTaskCadence,
+      sdrIdFilter
+    );
   }
 }
 

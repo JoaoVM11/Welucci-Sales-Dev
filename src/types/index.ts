@@ -314,3 +314,118 @@ export interface HubspotConnectionConfig {
   lastSyncMeetingsAt?: string;
   lastSyncTasksAt?: string;
 }
+
+// --- Telemetria de Chamadas & Velocidade de Leads (Admin) ---
+export type CallOutcome = 
+  | 'CONNECTED_SCHEDULED'     // Atendida & Reunião Agendada
+  | 'CONNECTED_FOLLOWUP'      // Atendida & Follow-up Marcado
+  | 'CONNECTED_NO_FIT'        // Atendida & Sem Perfil / Desqualificado
+  | 'VOICEMAIL'               // Caixa Postal / Secretária
+  | 'NO_ANSWER'               // Não Atende / Tocou até desligar
+  | 'BUSY_REJECTED'           // Ocupado / Recusada
+  | 'INVALID_NUMBER';         // Número Inválido / Inexistente
+
+export interface CallRecord {
+  id: string;
+  sdrId: string;
+  sdrName: string;
+  contactName: string;
+  contactPhone: string;
+  companyName: string;
+  leadCreatedAt: string;      // Data e hora em que o lead entrou no CRM
+  calledAt: string;           // Data e hora da tentativa de ligação
+  durationSeconds: number;    // Duração da chamada falada
+  status: 'CONNECTED' | 'NOT_CONNECTED'; // Atendida vs Não Atendida
+  outcome: CallOutcome;
+  outcomeLabel: string;
+  notes?: string;
+  callType: 'OUTBOUND' | 'INBOUND_RETURN';
+}
+
+export interface LeadScheduleSpeedItem {
+  leadId: string;
+  contactName: string;
+  companyName: string;
+  sdrId: string;
+  sdrName: string;
+  channel: 'INBOUND_FORM' | 'OUTBOUND_CADENCE' | 'WHATSAPP' | 'REFERRAL';
+  leadCreatedAt: string;      // Entrada do lead no CRM
+  scheduledAt: string;        // Momento em que a reunião foi agendada
+  meetingDate: string;        // Data marcada da reunião
+  timeToScheduleMinutes: number; // Minutos entre criação e agendamento
+  timeToScheduleFormatted: string; // Ex: "18m", "1h 45m", "26h"
+  speedCategory: 'SPEED_ULTRA_FAST' | 'SPEED_SAME_DAY' | 'SPEED_NEXT_DAY' | 'SPEED_LONG_CYCLE';
+  speedCategoryLabel: string;
+}
+
+export interface LeadTaskCadenceRelation {
+  leadId: string;
+  contactName: string;
+  companyName: string;
+  sdrId: string;
+  sdrName: string;
+  leadCreatedAt: string;
+  leadAgeHours: number;
+  leadAgeDays: number;
+  firstTouchSlaMinutes: number; // Tempo até o 1º toque/tarefa executado
+  firstTouchSlaStatus: 'MET' | 'BREACHED' | 'PENDING';
+  totalTasksCount: number;
+  completedTasksCount: number;
+  pendingTasksCount: number;
+  overdueTasksCount: number;
+  cadenceStage: 'D0_IMMEDIATE' | 'D1_FOLLOWUP' | 'D2_CADENCE' | 'D3_PLUS_PERSISTENCE';
+  cadenceStageLabel: string;
+  tasksList: {
+    id: string;
+    title: string;
+    type: string;
+    dueAt: string;
+    completedAt?: string;
+    leadAgeWhenDue: string; // Ex: "D0 (+15m)", "D+1 (+24h)"
+    status: 'PENDING' | 'COMPLETED';
+    isCall: boolean;
+  }[];
+}
+
+export interface AdminTelemetrySummary {
+  // Chamadas
+  totalCallsDialed: number;
+  totalCallsConnected: number;
+  connectRatePercent: number;
+  totalTalkTimeMinutes: number;
+  avgTalkTimeSeconds: number;
+  callsScheduledCount: number;
+  outcomesBreakdown: {
+    outcome: CallOutcome;
+    label: string;
+    count: number;
+    percent: number;
+    isConnected: boolean;
+  }[];
+
+  // Tempo para Agendar
+  avgTimeToScheduleMinutes: number;
+  avgTimeToScheduleFormatted: string;
+  medianTimeToScheduleMinutes: number;
+  fastestTimeToScheduleFormatted: string;
+  speedDistribution: {
+    category: string;
+    label: string;
+    description: string;
+    count: number;
+    percent: number;
+  }[];
+
+  // Tarefas vs Data de Criação do Lead
+  avgFirstTouchSlaMinutes: number;
+  firstTouchSlaCompliancePercent: number;
+  tasksByLeadAgeDistribution: {
+    ageBucket: 'D0' | 'D1' | 'D2' | 'D3' | 'D5_PLUS';
+    label: string;
+    description: string;
+    tasksCount: number;
+    completedCount: number;
+    overdueCount: number;
+    leadsCount: number;
+  }[];
+}

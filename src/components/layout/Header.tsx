@@ -66,6 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
   const getViewTitle = () => {
     switch (currentView) {
       case 'admin-overview': return 'Visão Geral da Operação';
+      case 'admin-telemetry': return 'Telemetria Comercial: Chamadas & Velocidade de Leads';
       case 'admin-goals': return 'Gestão de Metas e Escopos (Admin)';
       case 'admin-users': return 'Gestão de Usuários da Equipe';
       case 'admin-team': return 'Quadro de Saúde da Equipe';

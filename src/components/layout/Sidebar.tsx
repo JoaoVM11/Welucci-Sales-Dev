@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, Clock, CalendarCheck2, Target, 
   CalendarRange, FileSpreadsheet, Network, Settings, 
   ListTodo, UserCheck, History, Sparkles, ChevronDown, Bot, Flame,
-  Calendar, Activity, X
+  Calendar, Activity, X, PhoneCall
 } from 'lucide-react';
 import { User } from '../../types';
 
@@ -36,6 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const adminNav = [
     { id: 'admin-overview', label: 'Visão Geral', icon: LayoutDashboard },
+    { id: 'admin-telemetry', label: 'Telemetria & Chamadas', icon: PhoneCall, badge: 'Novo' },
     { id: 'admin-goals', label: 'Metas e Escopos (Admin)', icon: Target, badge: 'Definir' },
     { id: 'admin-users', label: 'Equipe & Usuários', icon: UserCheck, badge: 'Gestão' },
     { id: 'admin-team', label: 'Quadro da Equipe', icon: Users },

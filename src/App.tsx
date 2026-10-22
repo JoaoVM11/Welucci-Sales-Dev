@@ -12,6 +12,7 @@ import { HubspotIntegrationView } from './views/admin/HubspotIntegrationView';
 import { MicrosoftIntegrationView } from './views/admin/MicrosoftIntegrationView';
 import { SettingsView } from './views/admin/SettingsView';
 import { TeamManagementView } from './views/admin/TeamManagementView';
+import { TelemetryDashboard } from './components/admin/TelemetryDashboard';
 import { GeminiCopilotDrawer } from './components/ai/GeminiCopilotDrawer';
 import { SdrDashboard } from './views/sdr/SdrDashboard';
 import { SdrRoutine } from './views/sdr/SdrRoutine';
